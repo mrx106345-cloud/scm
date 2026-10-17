@@ -127,6 +127,68 @@ RTL is test-only surface; production bundle excludes it. Model choice still defe
   `#!/bin/sh` (Windows cannot spawn shebang-less hooks) and are LF-only.
 - `commitlint.config.js` renamed to `.cjs`: `frontend/package.json` has
   `"type": "module"`, so cosmiconfig loaded the CommonJS config as ESM
+
+## 16. Editor/gate parity: vite-env, vitest 5, single vite (2026-10-17)
+
+Four VS Code diagnostics (TS 6.0.3 language service) were real gaps the
+pinned TS 5.7.2 gate could not see; each was fixed at the source:
+
+- **TS2882 side-effect CSS import** — `src/vite-env.d.ts` did not exist.
+  Added the canonical `/// <reference types="vite/client" />` (vite
+  declares `*.css`), so `import './styles/index.css'` resolves in every
+  TS version.
+- **baseUrl deprecation (error in TS 6)** — removed `baseUrl`; `paths`
+  resolves relative to tsconfig since TS 4.1. Verified on 5.7.2 and
+  6.0.3.
+- **TS2769 plugin overloads in vite/vitest configs** — `vitest@1.6.1`
+  nested its own `vite@5.4.21` beside the app's `vite@6.0.3`, so
+  `defineConfig` and the plugins spoke two incompatible type universes.
+  Upgraded `vite -> ^6.4.4` (still major 6; satisfies `@vitejs/plugin-react`
+
+## 17. Dependency audit remediation: router 7, lint-staged 17 (2026-10-17)
+
+`npm audit` after the toolchain upgrade reported 5 vulnerabilities
+(3 high, 2 moderate); full detail in `SECURITY_FINDINGS.md`.
+
+- `react-router-dom 6.28.0 -> 7.18.4` (exact pin kept). Two HIGH
+  redirect/XSS advisories were patchable in 6.30.6, but two MODERATE
+  ones (backslash open-redirect, `deserializeErrors` constructor
+  injection) have **no v6 fix** — vulnerable range extends to 7.17.0.
+  Chose the v7 major over living with known moderates: the app touches
+  only the API surface that is stable across v6->v7
+  (`BrowserRouter`/`Routes`/`Route`/`Link`/`NavLink`/`useParams`;
+  `react-router-dom` in v7 re-exports `react-router`, so import paths
+  are unchanged). Guarded by new `src/router.test.tsx` (4 tests).
+- `lint-staged 15.5.2 -> 17.6.0` clears the HIGH `braces` DoS chain
+  (`braces <- micromatch <- lint-staged`); v17 needs Node >=22.22.1,
+  repo runs 24.19.0. Config (`.lintstagedrc`) unchanged; verified by the
+  pre-commit run on this very commit.
+- `@types/node ^24` made explicit (was transitive; now referenced by
+  `tsconfig.types` for the config-file type checks).
+- Result: `npm audit` reports **0 vulnerabilities**. Policy going
+  forward: re-run `npm audit` with each dependency change; adding it to
+  CI is noted as a follow-up.
+
+  and `@tailwindcss/vite` peers), `vitest 1.6.1 -> 5.0.5`,
+  `@vitest/coverage-v8 -> 5.0.5`, plus explicit `@types/node ^24`.
+  `npm ls vite` now shows a single deduped 6.4.4. This also resolves the
+  earlier "Vitest 5 peer conflict" (vitest 5 wants `vite ^6.4.0`, the
+  lockfile sat at 6.0.3).
+- **Gate blind spot** — `tsconfig.include` was `["src"]`, so the config
+  files were never type-checked by `npm run type-check`; now includes
+  `vite.config.ts`, `vitest.config.ts`, `playwright.config.ts`.
+- **CSS `unknownAtRules` warning for Tailwind's `@theme`** —
+  `.vscode/settings.json` sets `css.lint.unknownAtRules: ignore`
+  (committed: root `.gitignore` now un-ignores `.vscode/settings.json`).
+- **Coverage re-baseline**: vitest 5's v8 provider counts branches and
+  functions much more strictly (every `?.`/`??`/closure counts), so the
+  observed baseline moved from 40.5/56.1/73.8 to 39.4/43.5/38.5
+  (lines/functions/branches) with identical code and tests. Thresholds
+  re-pinned at 39/43/38/37; the 80/80/75/80 targets are unchanged.
+
+Gates after the change, all exit 0: format, lint, `tsc 5.7.2 --noEmit`,
+`tsc 6.0.3 --noEmit` (editor parity), 59/59 tests, coverage, build.
+
   and crashed — the config had never actually executed before git existed.
 - lint-staged glob widened to `**/*.{ts,tsx}` so nested sources match
   deterministically when the config is resolved from `frontend/`.
