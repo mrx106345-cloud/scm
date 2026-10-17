@@ -24,13 +24,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov', 'cobertura'],
       reportsDirectory: './coverage',
-      // Interim baseline while new unit coverage lands; raise back to
-      // lines/functions/statements 80 and branches 75 once covered.
+      // Ratcheted 2026-10-17 after UI-primitive suites landed (actual
+      // lines 40.5 / functions 56.1 / branches 73.8, from lcov.info).
+      // Next milestone: cover feature pages, hooks, and lib formatters,
+      // then raise toward 80/80/75/80.
       thresholds: {
-        lines: 10,
-        functions: 30,
-        branches: 35,
-        statements: 10,
+        lines: 40,
+        functions: 55,
+        branches: 70,
+        statements: 40,
       },
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.d.ts', 'src/**/*.test.{ts,tsx}', 'src/main.tsx', 'src/vite-env.d.ts'],

@@ -88,3 +88,49 @@ RTL is test-only surface; production bundle excludes it. Model choice still defe
   no new runtime network surface (formatters use `Intl`, modal no longer needs
   `@headlessui/react`).
 
+
+
+## 14. Tailwind CSS v4 design-token layer (2026-10-17)
+
+- New devDependencies: `tailwindcss@^4.3.3` + `@tailwindcss/vite@^4.3.3`.
+  Build-time only: the output is a static CSS file served same-origin, no
+  runtime JS, no CDN, no telemetry — satisfies the offline hard rule.
+- Why: the UI kit and feature pages were written against a shadcn-style
+  utility vocabulary (176 distinct tokens incl. semantic `bg-success/10`,
+  `text-warning`, `focus:ring-ring`) while the repo contained **zero**
+  stylesheets, so every component rendered unstyled.
+- `src/styles/index.css` defines each semantic token in `@theme`
+  (slate/blue enterprise palette), a token-level `.dark` scope for the
+  future theme toggle (components carry no `dark:` variants), the
+  `slideIn` keyframes referenced by Toast's `animate-[slideIn_...]`, and a
+  v4 base-layer shim setting the default border color to
+  `--color-border` (v4 would otherwise inherit `currentColor`).
+- Registered `tailwindcss()` in `vite.config.ts`; `main.tsx` imports the
+  stylesheet. Vitest does not process CSS, so tests are unaffected.
+- Verified: production build emits `dist/assets/index-*.css` (~27 kB)
+  containing all used utilities, including escaped `focus\:ring-ring`
+  and `hover\:bg-accent`.
+
+## 15. Git repository, LF policy and real hooks (2026-10-17)
+
+- `git init -b main` (earlier attempts were no-ops); initial import
+  `0534ae2` = 204 files, secrets scan clean (no `.env`/keys staged).
+- Root `.gitignore` added (Python caches/venvs, env files, logs); the
+  nested `frontend/.gitignore` already covered `node_modules`/`dist`.
+- `.gitattributes` pins `* text=auto eol=lf`: the Git for Windows
+  **system-level** `core.autocrlf=true` (C:/Program Files/Git/etc/gitconfig)
+  kept rewriting checked-out files to CRLF, which was the root cause of
+  repeated Prettier `endOfLine` flakiness. Attributes outrank autocrlf.
+- Hooks live at the repo root (`core.hooksPath=.husky`) because the git
+  repo root and the npm package root differ; each hook `cd`s into
+  `frontend/` for lint-staged/commitlint. Both files start with
+  `#!/bin/sh` (Windows cannot spawn shebang-less hooks) and are LF-only.
+- `commitlint.config.js` renamed to `.cjs`: `frontend/package.json` has
+  `"type": "module"`, so cosmiconfig loaded the CommonJS config as ESM
+  and crashed — the config had never actually executed before git existed.
+- lint-staged glob widened to `**/*.{ts,tsx}` so nested sources match
+  deterministically when the config is resolved from `frontend/`.
+- Proven live: pre-commit ran eslint+prettier on 50 files; commit-msg
+  **rejected** one over-long body line (`body-max-line-length`) and then
+  passed after rewrapping. CI workflow YAML validated with PyYAML; the
+  actual Actions run still needs a GitHub remote.
