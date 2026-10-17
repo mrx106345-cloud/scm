@@ -1,0 +1,4 @@
+#!/bin/sh
+# Pre-commit: format + lint only staged files (config: frontend/.lintstagedrc).
+# Hooks live at the repo root; the npm project is in frontend/.
+cd frontend && npx --no -- lint-staged

@@ -1,0 +1,26 @@
+# permissions-map.yaml — minimal RBAC matrix derived from api-spec.md roles.
+# Full spec matrix lives in api-spec; this file gates endpoint minimum roles.
+# Roles: admin > planner > purchaser > viewer. Deny by default.
+roles: [admin, planner, purchaser, viewer]
+endpoints:
+  POST /api/v1/auth/login: public
+  POST /api/v1/auth/logout: any
+  GET /api/v1/auth/me: any
+  GET /api/v1/dashboard/summary: viewer
+  GET /api/v1/alerts: viewer
+  POST /api/v1/alerts/{id}/acknowledge: planner
+  POST /api/v1/alerts/{id}/resolve: planner
+  GET /api/v1/recommendations: planner
+  POST /api/v1/recommendations/{id}/decision: planner
+  GET /api/v1/items: viewer
+  GET /api/v1/suppliers: viewer
+  POST /api/v1/pipeline/run: planner
+  POST /api/v1/imports: planner
+  POST /api/v1/chat: viewer
+  GET /api/v1/reports/savings: planner
+  GET /api/v1/learning/proposals: admin
+  POST /api/v1/learning/proposals/{id}/approve: admin
+  GET /api/v1/admin/users: admin
+  PATCH /api/v1/admin/settings: admin
+  GET /api/v1/admin/audit: admin
+  GET /api/v1/admin/system: admin

@@ -1,0 +1,5 @@
+#!/bin/sh
+# husky pre-commit hook
+# Runs format check and lint on staged TypeScript/TypeScript React files
+
+npx lint-staged

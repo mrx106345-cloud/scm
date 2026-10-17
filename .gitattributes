@@ -1,0 +1,14 @@
+# Pin LF in the repo AND the working tree. On Windows, core.autocrlf would
+# rewrite files to CRLF on checkout, which repeatedly broke Prettier's
+# endOfLine gate. Attributes take precedence over core.autocrlf.
+* text=auto eol=lf
+
+# Binary assets (auto-detection covers these; listed for clarity).
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+
+# Windows shell scripts must remain CRLF to run in cmd.exe.
+*.bat text eol=crlf
+*.cmd text eol=crlf

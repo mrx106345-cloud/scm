@@ -1,0 +1,9 @@
+#!/bin/sh
+# Commit-msg: enforce conventional commits (config: frontend/commitlint.config.js).
+# Hooks run at the repo root; commitlint config + node_modules live in frontend/.
+msg_file="$1"
+case "$msg_file" in
+  /*|[A-Za-z]:*) ;; # already absolute
+  *) msg_file="$PWD/$msg_file" ;;
+esac
+cd frontend && npx --no -- commitlint --edit "$msg_file"

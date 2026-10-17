@@ -1,0 +1,194 @@
+{
+  "seed": 42,
+  "n_items": 20,
+  "n_suppliers": 25,
+  "sites": [
+    "S1",
+    "S2"
+  ],
+  "injected_events": {
+    "supplier_delays": [
+      {
+        "id": "D01",
+        "supplier": "SUP002"
+      },
+      {
+        "id": "D02",
+        "supplier": "SUP003"
+      },
+      {
+        "id": "D03",
+        "supplier": "SUP004"
+      },
+      {
+        "id": "D04",
+        "supplier": "SUP005"
+      },
+      {
+        "id": "D05",
+        "supplier": "SUP006"
+      },
+      {
+        "id": "D06",
+        "supplier": "SUP007"
+      },
+      {
+        "id": "D07",
+        "supplier": "SUP008"
+      },
+      {
+        "id": "D08",
+        "supplier": "SUP009"
+      },
+      {
+        "id": "D09",
+        "supplier": "SUP010"
+      },
+      {
+        "id": "D10",
+        "supplier": "SUP011"
+      },
+      {
+        "id": "D11",
+        "supplier": "SUP012"
+      },
+      {
+        "id": "D12",
+        "supplier": "SUP013"
+      },
+      {
+        "id": "D13",
+        "supplier": "SUP014"
+      },
+      {
+        "id": "D14",
+        "supplier": "SUP015"
+      },
+      {
+        "id": "D15",
+        "supplier": "SUP016"
+      }
+    ],
+    "demand_spikes": [
+      {
+        "id": "SP01",
+        "sku": "SKU00008"
+      },
+      {
+        "id": "SP02",
+        "sku": "SKU00015"
+      },
+      {
+        "id": "SP03",
+        "sku": "SKU00002"
+      },
+      {
+        "id": "SP04",
+        "sku": "SKU00009"
+      },
+      {
+        "id": "SP05",
+        "sku": "SKU00016"
+      },
+      {
+        "id": "SP06",
+        "sku": "SKU00003"
+      },
+      {
+        "id": "SP07",
+        "sku": "SKU00010"
+      },
+      {
+        "id": "SP08",
+        "sku": "SKU00017"
+      },
+      {
+        "id": "SP09",
+        "sku": "SKU00004"
+      },
+      {
+        "id": "SP10",
+        "sku": "SKU00011"
+      }
+    ],
+    "supplier_outages": [
+      {
+        "id": "O01"
+      },
+      {
+        "id": "O02"
+      },
+      {
+        "id": "O03"
+      },
+      {
+        "id": "O04"
+      },
+      {
+        "id": "O05"
+      }
+    ],
+    "data_defects": [
+      {
+        "id": "DEF01"
+      },
+      {
+        "id": "DEF02"
+      },
+      {
+        "id": "DEF03"
+      },
+      {
+        "id": "DEF04"
+      },
+      {
+        "id": "DEF05"
+      },
+      {
+        "id": "DEF06"
+      },
+      {
+        "id": "DEF07"
+      },
+      {
+        "id": "DEF08"
+      },
+      {
+        "id": "DEF09"
+      },
+      {
+        "id": "DEF10"
+      },
+      {
+        "id": "DEF11"
+      },
+      {
+        "id": "DEF12"
+      },
+      {
+        "id": "DEF13"
+      },
+      {
+        "id": "DEF14"
+      },
+      {
+        "id": "DEF15"
+      },
+      {
+        "id": "DEF16"
+      },
+      {
+        "id": "DEF17"
+      },
+      {
+        "id": "DEF18"
+      },
+      {
+        "id": "DEF19"
+      },
+      {
+        "id": "DEF20"
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+Your product, explained in detail
+
+This describes the product as your plan defines it. Where I’ve filled in a design choice, I mark it as a suggestion for you to confirm.
+
+1. What it is
+
+An on-premise AI system that watches a company’s supply chain data, spots problems early, recommends what to do, and (when the customer allows) takes the action. It installs on the customer’s own server, runs a small local model (2GB), and sends nothing outside the company. You sell the software once and charge yearly maintenance.
+
+In one line: it helps a manufacturer avoid stockouts, cut expedite costs and hold less inventory, while keeping all data private.
+
+2. Who uses it inside the company
+User	What they do with it
+Supply chain or planning manager	Reviews alerts and approves recommended actions daily
+Purchase team	Gets suggested POs and supplier alternatives
+Plant or operations head	Sees risks to production and a weekly summary
+Owner or finance head	Sees the savings report
+IT person	Installs, monitors and updates it
+3. How it works, step by step
+
+Step 1: Connect to data. Connectors read from ERP (SAP, Tally, Zoho, Oracle), warehouse and transport systems, and spreadsheets. At first these connections are read-only.
+
+Step 2: Check and clean data. The system rates data quality, flags missing or inconsistent fields (supplier lead times, item codes), and tells the customer what to fix.
+
+Step 3: Forecast and optimize. Classical forecasting and optimization methods calculate expected demand, safety stock, reorder points and supplier delay risk. This is where the numbers come from, not from the language model.
+
+Step 4: Understand and explain. The local 2GB model reads text such as supplier emails, delay notices and notes, summarizes them, explains in plain language why an alert was raised, and answers questions typed into a chat box.
+
+Step 5: Agents work as a team. Each agent has one job and passes results to the next (see section 4).
+
+Step 6: Decide with a human. Recommendations go to an approval queue. The user approves, edits or rejects.
+
+Step 7: Act. Approved actions are executed: a draft PO is created in the ERP, a reorder is raised, or a message to the supplier is prepared.
+
+Step 8: Learn. The system compares what it predicted with what actually happened, and uses that to improve.
+
+4. The agent network
+Agent	Its work
+Data agent	Pulls data from connectors on a schedule and cleans it
+Demand agent	Forecasts demand from sales history, orders and seasonality
+Inventory agent	Calculates stock levels, reorder points, and excess or shortage
+Supplier risk agent	Tracks lead-time changes, late deliveries and single-supplier dependence
+Logistics agent	Watches shipment status and delay patterns from the customer’s own transport data
+Alert agent	Ranks problems by money at risk and urgency
+Explainer agent	Uses the local model to write the “what, why and what to do” for each alert
+Action agent	Prepares POs, reorders and messages; executes them only when allowed
+Learning agent	Measures forecast errors and decision outcomes
+
+A coordinator (orchestrator) decides which agent runs, in what order, and what goes to a human.
+
+5. A real example
+A supplier’s lead time for a raw material grows from 10 to 18 days over three deliveries.
+The supplier risk agent notices. The inventory agent calculates that stock runs out in 12 days.
+The alert agent ranks it as high: production of two product lines is at risk, about ₹8 lakh in orders.
+The explainer agent writes: “Supplier X is getting slower. At the current pace you run out on the 25th. Suggested: order 4 tonnes from Supplier Y today, extra cost ₹40,000, avoids ₹8 lakh in delayed orders.”
+The planner clicks Approve. The action agent creates the draft PO in the ERP.
+Later the system records whether the stockout was avoided and what it cost.
+6. Autonomy levels
+Level	Behaviour	When
+1. Advise	Alerts and recommendations only	Pilot and first months
+2. Approve and execute	Acts after a human clicks approve	Normal operation
+3. Auto-act	Acts alone on low-risk, low-value decisions within limits the customer sets	After trust is built
+7. What “self-evolving” means here
+
+Your original problem statement used this phrase. In your product it should mean it learns from outcomes, and updates are controlled:
+
+It tracks forecast errors and adjusts its parameters.
+Model and rule updates are versioned, tested against past data, and applied only after the customer approves.
+Every change is logged, and the customer can roll back.
+
+Enterprises accept learning systems, but not systems that change themselves without approval or an audit trail.
+
+8. Market shift prediction
+
+Without external APIs, the system predicts shifts from what it can see inside the company: order trends, price changes in supplier quotes, lead-time drift, seasonal patterns and customer order changes. For outside signals (commodity prices, port news), a suggestion is one-way import: the customer drops in files or an optional signed data pack, and everything is processed locally. Be honest in sales: this is demand and risk sensing, not predicting the whole market.
+
+9. Installation and setup flow
+Pre-check of the server (RAM, CPU, disk, OS), with a pass or fail report.
+Installer fetches the required software, or uses the offline bundle.
+Connection wizard links the ERP and other systems, with encrypted credentials stored locally.
+Data quality check and a report of fixes needed.
+First run in shadow mode (advise only), with a user training session.
+Go-live review after 60-90 days, with a savings report.
+10. Security and privacy
+All data and models stay on the customer’s server.
+Read-only access by default, and write access switched on separately.
+Role-based access, so each user sees only what they should.
+Audit log of every alert, approval and action.
+Signed installers and updates, with rollback.
+No telemetry unless the customer opts in.
+11. What each tier includes (suggestion)
+Tier	Includes
+Starter	One site, data connectors, demand and inventory agents, alerts, chat, advise mode
+Professional	Multi-site, supplier risk and logistics agents, approval workflows, action agent, audit logs, savings dashboard
+Regulated / offline	Offline bundle, custom modules, extended audit and compliance reports
+12. What it does not do
+It does not provide hardware.
+It does not run in the cloud or send data out.
+It does not guarantee savings, since results depend on data quality and how the team uses it.
+It does not replace the planner: it speeds up their decisions.
+It does not forecast global markets on its own.
+13. Decisions still open for you
+Which ERP connectors do you build first? Pick the one your first industry uses most.
+Which 2GB model, and is it good enough on supply chain text? Test it with real examples.
+Which actions can the action agent perform at launch?
+What is the supported-server list (OS, RAM, CPU)?
+What exactly counts as “maintenance” (updates, support hours, new connectors)?
+
+I can turn this into a one-page product description for buyers, or a technical architecture document for your developers. Tell me which one you need.
