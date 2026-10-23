@@ -3,13 +3,7 @@
 export interface User {
   id: string;
   username: string;
-  email: string;
-  role: 'admin' | 'technician' | ' Viewer';
-  firstName: string;
-  lastName: string;
-  avatarUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  role: 'admin' | 'planner' | 'purchaser' | 'viewer';
 }
 
 export type UserRole = User['role'];
