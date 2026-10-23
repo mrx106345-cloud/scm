@@ -22,7 +22,7 @@ export function useAuth() {
   return ctx;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 

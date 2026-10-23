@@ -153,7 +153,25 @@ Needs from owner: none.
 ## Phase 1 security closing (2026-10-13)
 Done: egress gate 2/2 (`backend/tests/security/test_egress.py`); audit hash chain unit-tested (`test_audit.py`); no secrets in repo/docs; 33/33 regression green; design commits (audit, RBAC, formula guard).
 
-## Notes
+
+
+## Production Readiness (2026-10-23)
+
+- **Unit tests**: 149/149 passing (backend) + 6/6 golden tests passing
+- **TypeScript**: Clean (
+px tsc --noEmit, exit code 0)
+- **Frontend dependencies**: 0 vulnerabilities (
+pm audit, exit 0)
+- **Security guardrails**: All 10 items verified per SECURITY_FINDINGS.md
+- **Egress test**: Passes — no outbound network calls
+- **AuthProvider**: TypeScript error fixed (: ReactNode added)
+- **Third-party licenses**: Documented in docs/third_party_licenses.md
+- **Model selection**: Documented in docs/model_selection.md (pending owner approval)
+
+All Phase 1 exit criteria (A1-A3) measured on synthetic data are met. 
+
+---
+*Production readiness assessment added 2026-10-23.*## Notes
 - ` (1).md` duplicate files removed; canonical names authoritative.
 - Doc (README, todo, PROGRESS, SECURITY_FINDINGS) aligned to completed state.
 - Phases P2-P6 left as out-of-scope/sequenced (see `BACKLOG.md`); no owner approval required.
