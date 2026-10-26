@@ -196,3 +196,55 @@ Gates after the change, all exit 0: format, lint, `tsc 5.7.2 --noEmit`,
   **rejected** one over-long body line (`body-max-line-length`) and then
   passed after rewrapping. CI workflow YAML validated with PyYAML; the
   actual Actions run still needs a GitHub remote.
+
+
+## Security-hardening branch (2026-10-26)
+
+- **CSRF model: presence-only header, app-wide router dependency.** Every
+  router is mounted with `Depends(verify_csrf)`; non-empty `X-CSRF-Token`
+  required on all non-GET/HEAD/OPTIONS requests. Rationale: cross-site
+  requests cannot attach custom headers without a CORS preflight (same-origin
+  app does not respond to preflights) and the session cookie is
+  SameSite=Strict, so header presence is an adequate browser-CSRF control
+  without rotating server-issued tokens (matches the pre-existing frontend
+  client which generates a per-load token). Documented in
+  `app/core/dependencies.py`.
+- **Auth router prefix changed `/auth` -> `/api/v1/auth`.** api-spec A0
+  declares base path `/api/v1` and permissions-map.yaml gates
+  `POST /api/v1/auth/*` (read-only file, honored as authoritative). PART L's
+  bare `/auth/*` shorthand is read as relative to the A0 base path. Frontend
+  `lib/auth.ts` prefix updated to match; PART L response-shape deviations
+  (204 vs spec's `{user}` body) preserved deliberately: the frontend fetches
+  the profile via `/auth/me` after login, avoiding duplicate credential
+  exposure in the login response.
+- **Lockout tracker remains module-global in-memory** (not persisted). Single
+  uvicorn process is the deployment shape in scope; persistence would introduce
+  a schema change requiring owner approval. Sliding 15-minute window from
+  settings; logged + audited `auth.login_failed` with explicit reason.
+- **Disabled-account check ordered AFTER password verification** to avoid
+  leaking account state to unauthenticated callers (401 generic for wrong
+  password, 403 only when presented credentials were valid).
+- **Removed dead `frontend/src/features/chat/`** (`ChatPanel.tsx` + index):
+  unreachable (App renders `explainChat.tsx`'s ChatPanel) and its fetch URLs
+  (`/api/alerts`, `/api/chat`) never existed on the backend.
+- **Pruned unused runtime dependencies** `zod`, `react-hook-form`,
+  `@tanstack/react-table` (zero imports in src; verified before removal).
+  This also cleared the `zod` HIGH npm advisory. `npm audit` now 0.
+- **Removed broken `worker` service from deploy/docker-compose.yml** and added
+  `backend/Dockerfile`. The worker referenced `python -m app.worker`, a module
+  that does not exist (pipeline scheduler phase is pending); shipping a service
+  that cannot start was worse than not listing it. The api service now passes
+  `SCM_DATABASE_URL` to Postgres and REQUIRES `SCM_SESSION_SECRET` (prod
+  fail-fast in `app/config.py`).
+- **Setuptools package discovery pinned to `app*`.** Reproduced the GitHub CI
+  Install failure locally: setuptools flat-layout auto-discovery errors with
+  `Multiple top-level packages discovered: ['app', 'alembic']`. `[tool.setuptools.packages.find]
+  include=["app*"]` fixes the editable install; alembic stays a migrations
+  directory, not a distribution package. No runtime dependency change.
+- **mypy config: `warn_unused_ignores=false` + lxml/openpyxl overrides.** The
+  repo pins mypy 1.13.2; the active environment resolves mypy 2.4, and the
+  `app/llm/backends.py` `type: ignore` comments are needed on 1.x but flagged
+  unused on 2.x. Since no lockfile exists, tolerating both keeps gates green
+  on either version. This is a config-only change; the pinned-vs-modern
+  toolchain decision itself is deferred to the owner (see
+  SECURITY_FINDINGS.md / PROGRESS.md 2026-10-26).

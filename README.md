@@ -3,16 +3,17 @@
 On-premise, fully offline AI supply chain risk system for mid-size manufacturers.
 Spec: `DEVELOPMENT_SPEC_scm_agent.md`. Progress: `PROGRESS.md`. Decisions: `DECISIONS.md`.
 
-## Status (2026-10-13) — Phase 1 complete
+## Status (2026-10-26) — Phases 1-3 implemented + security-hardening pass
 
-- **Tests:** 33/33 green (unit 23, golden 3, integration 2, security 2, skeleton 4).
-- **Lint/types:** ruff clean, ruff format clean, mypy clean (core/agents/forecasting).
+- **Tests:** backend 173/173 green (unit, integration, security, golden inventory 11/11 cases, golden alerts/classify); frontend 93/93 Vitest tests in 18 files.
+- **Lint/types:** ruff clean, ruff format clean, mypy `app` clean (strict, 55 files). Frontend lint/format/type-check clean.
+- **Security-hardening (2026-10-26):** JSON-body login with lockout + full `auth.*` audit trail, RBAC deny-by-default on every router, CSRF header dependency app-wide, prod-secret fail-fast, live-ledger dashboard summary, outbox honors edited payloads, prompt-injection fence hardening, frontend auth client with same-origin hardening + global 401 redirect. See `SECURITY_FINDINGS.md`.
 - **Acceptance (A1-A3)** on synthetic data, `tools/simulate_acceptance.py`:
   - 200 items: A1 recall 0.833 (40/48 event-caused stockout detected), A2 false-risk 2.276 per 100 items per week (threshold <=3.0), A3 WAPE-beats-naive 0.785 (threshold >=0.70) — PASS.
   - 5,000 items: A1 0.847 / A2 2.295 / A3 0.815 — PASS.
 - **Egress test** (no outbound connections by default): 2/2 pass (`backend/tests/security/test_egress.py`).
 - **Data seeded:** `data/synth/` canonical CSVs + `ground_truth.json` (200 items, 2 sites, 25 suppliers).
-- **Dev stack:** `deploy/docker-compose.yml` (PostgreSQL 16 + api + worker); frontend structure documented under **Run** below.
+- **Dev stack:** `deploy/docker-compose.yml` (PostgreSQL 16 + api; the scheduler/worker service arrives with the pipeline-cron phase).
 
 ## Run
 
@@ -21,9 +22,9 @@ Setup:
 pip install -e ./backend[dev]
 pytest ./backend -q
 ruff check ./backend
-mypy ./backend/app/core ./backend/app/agents ./backend/app/forecasting
+mypy ./backend/app
 
-# API + worker
+# API (uvicorn; scheduler/worker lands with the pipeline-cron phase)
 docker compose -f deploy/docker-compose.yml up --build
 ```
 
@@ -36,7 +37,7 @@ npm run dev            # dev server, proxies /api -> 127.0.0.1:8000
 npm run lint           # ESLint 9 flat config (React + hooks + jsx-a11y + TS)
 npm run format:check   # Prettier gate (npm run format:write to fix)
 npm run type-check     # tsc --noEmit (strict)
-npm test -- --run      # Vitest unit tests (11 tests)
+npm test -- --run      # Vitest unit tests (93 tests, 18 files)
 npm run test:coverage  # Vitest + V8 coverage (interim thresholds; raise toward 80%)
 npm run build          # tsc + vite build (route-split Dashboard chunk)
 npm run test:e2e       # Playwright smoke (once: `npx playwright install`, networked runner)
