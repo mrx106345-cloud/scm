@@ -5,7 +5,10 @@
 // rendered and keep API URLs pinned to same-origin paths (blocking http://,
 // https://, and javascript: URLs).
 
-const SAME_ORIGIN_API = /^\//;
+// Membership check, not a leading-slash check: only paths that live under
+// the same-origin API namespace (/api/... or /auth/...) pass. This rejects
+// protocol-relative URLs like //evil.com/x and bare paths like /foo.
+const SAME_ORIGIN_API = /^\/(api|auth)(\/|$)/;
 
 export function isSameOriginApiPath(path: string): boolean {
   return SAME_ORIGIN_API.test(path);

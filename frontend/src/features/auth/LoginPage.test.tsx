@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from './LoginPage';
 import { useAuth } from '@/hooks/useAuth';
-import { login } from '@/lib/auth';
+import { login, type AuthUser } from '@/lib/auth';
 
 function renderPage() {
   return render(
@@ -24,6 +24,21 @@ vi.mock('@/lib/auth', () => ({
 const mockUseAuth = vi.mocked(useAuth);
 const mockLogin = vi.mocked(login);
 
+// Complete AuthContext stub with overridable fields; the page under test only
+// consumes `login`. Cast through unknown because the real context's login is
+// Promise<void> while lib/auth's login resolves a user (resolution value is
+// ignored by the page).
+type AuthCtx = ReturnType<typeof useAuth>;
+const ctxStub = (overrides: Record<string, unknown> = {}): AuthCtx =>
+  ({
+    user: null,
+    loading: false,
+    isAuthenticated: false,
+    logout: async () => {},
+    refetch: async () => {},
+    ...overrides,
+  }) as unknown as AuthCtx;
+
 describe('features/auth/LoginPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -36,7 +51,7 @@ describe('features/auth/LoginPage', () => {
   });
 
   it('renders login form fields', () => {
-    mockUseAuth.mockReturnValue({ login: mockLogin } as any);
+    mockUseAuth.mockReturnValue(ctxStub({ login: mockLogin }));
 
     renderPage();
 
@@ -46,7 +61,7 @@ describe('features/auth/LoginPage', () => {
   });
 
   it('calls login with entered credentials on submit', async () => {
-    mockUseAuth.mockReturnValue({ login: mockLogin } as any);
+    mockUseAuth.mockReturnValue(ctxStub({ login: mockLogin }));
     mockLogin.mockResolvedValue({ id: 'u1', username: 'alice', role: 'viewer' } as const);
 
     renderPage();
@@ -61,7 +76,7 @@ describe('features/auth/LoginPage', () => {
   });
 
   it('shows error when login fails', async () => {
-    mockUseAuth.mockReturnValue({ login: mockLogin } as any);
+    mockUseAuth.mockReturnValue(ctxStub({ login: mockLogin }));
     mockLogin.mockRejectedValue(new Error('Invalid username or password'));
 
     renderPage();
@@ -78,9 +93,11 @@ describe('features/auth/LoginPage', () => {
   });
 
   it('disables submit button while logging in', async () => {
-    let resolveLogin!: (value: { id: string; username: string; role: string }) => void;
-    mockUseAuth.mockReturnValue({ login: mockLogin } as any);
-    mockLogin.mockImplementation(() => new Promise((r) => (resolveLogin = r as () => void)));
+    let resolveLogin!: (u: AuthUser) => void;
+    mockUseAuth.mockReturnValue(ctxStub({ login: mockLogin }));
+    mockLogin.mockImplementation(
+      () => new Promise<AuthUser>((r) => (resolveLogin = r as (u: AuthUser) => void)),
+    );
 
     renderPage();
 

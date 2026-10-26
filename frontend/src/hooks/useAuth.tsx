@@ -47,8 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
   }, []);
 
   const doLogout = useCallback(async () => {
-    await logout();
-    setUser(null);
+    try {
+      await logout();
+    } finally {
+      // Clear local state even if the server logout failed (offline, 5xx):
+      // the next navigation shows /login instead of a stuck session.
+      setUser(null);
+    }
   }, []);
 
   return (

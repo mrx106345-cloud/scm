@@ -1,5 +1,12 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useParams,
+  useNavigate,
+  Link,
+} from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ChatPanel } from './explainChat';
 import { SupplierList } from './features/suppliers/SupplierList';
@@ -48,15 +55,19 @@ function NavBar() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logout(); // useAuth clears local state even if the server call fails
       toast.success('Logged out');
-      navigate('/login', { replace: true });
     } catch {
-      toast.error('Logout failed');
+      // Server unreachable etc.: still sign out locally and go to /login.
+      toast.error('Logout failed; signed out locally');
     }
+    navigate('/login', { replace: true });
   };
 
   if (!isAuthenticated) return null;
+
+  const linkCls =
+    'w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-accent rounded transition-colors';
 
   return (
     <div
@@ -66,11 +77,14 @@ function NavBar() {
       <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
         {user?.username} ({user?.role})
       </div>
-      <nav aria-label="User actions">
-        <button
-          onClick={handleLogout}
-          className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-accent rounded transition-colors"
-        >
+      <nav aria-label="Primary" className="flex flex-col gap-1">
+        <Link to="/" className={linkCls}>
+          Dashboard
+        </Link>
+        <Link to="/suppliers" className={linkCls}>
+          Suppliers
+        </Link>
+        <button onClick={handleLogout} className={linkCls}>
           Sign out
         </button>
       </nav>

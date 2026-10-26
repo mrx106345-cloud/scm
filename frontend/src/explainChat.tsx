@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/auth';
 
 export type Explanation = {
   alert_id: string;
@@ -12,7 +13,7 @@ export type Explanation = {
 };
 
 async function fetchExplanation(alertId: string): Promise<Explanation> {
-  const r = await fetch(`/api/v1/alerts/${encodeURIComponent(alertId)}/explanation`);
+  const r = await apiRequest(`/api/v1/alerts/${encodeURIComponent(alertId)}/explanation`);
   if (!r.ok) throw new Error('explanation failed');
   return r.json();
 }
@@ -52,7 +53,7 @@ export type ChatResponse = {
 };
 
 async function postChat(question: string): Promise<ChatResponse> {
-  const r = await fetch('/api/v1/chat/ask', {
+  const r = await apiRequest('/api/v1/chat/ask', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
