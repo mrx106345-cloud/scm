@@ -7,8 +7,8 @@ from sqlalchemy import create_engine, text
 
 from app.connectors.sql_generic import (
     BLOCKED_KEYWORDS,
-    ConnectorError,
     MAX_DEFAULT_ROWS,
+    ConnectorError,
     QueryResult,
     execute_readonly,
     validate_readonly_select,
@@ -41,9 +41,15 @@ class TestValidateReadonlySelect:
             validate_readonly_select("SELECT 1; SELECT 2")
 
     def test_non_select_rejected(self) -> None:
-        for bad in ["INSERT INTO t (x) VALUES (1)", "UPDATE t SET x = 1",
-                    "DELETE FROM t", "DROP TABLE t", "CREATE TABLE t (x INT)",
-                    "ALTER TABLE t ADD COLUMN y INT", "TRUNCATE t"]:
+        for bad in [
+            "INSERT INTO t (x) VALUES (1)",
+            "UPDATE t SET x = 1",
+            "DELETE FROM t",
+            "DROP TABLE t",
+            "CREATE TABLE t (x INT)",
+            "ALTER TABLE t ADD COLUMN y INT",
+            "TRUNCATE t",
+        ]:
             with pytest.raises(ConnectorError, match="only a single SELECT"):
                 validate_readonly_select(bad)
 
@@ -54,18 +60,28 @@ class TestValidateReadonlySelect:
                 validate_readonly_select(sql)
 
     def test_blocked_tokens(self) -> None:
-        for tok in ("--", "/*", "xp_", "INTO OUTFILE", "LOAD_FILE", "GRANT",
-                    "COMMIT", "ROLLBACK", "BEGIN", "DECLARE"):
+        for tok in (
+            "--",
+            "/*",
+            "xp_",
+            "INTO OUTFILE",
+            "LOAD_FILE",
+            "GRANT",
+            "COMMIT",
+            "ROLLBACK",
+            "BEGIN",
+            "DECLARE",
+        ):
             sql = f"SELECT 1 {tok}"
-            with pytest.raises(ConnectorError, match=f"blockged token: {tok}"):
+            with pytest.raises(ConnectorError, match=f"blocked token: {tok}"):
                 validate_readonly_select(sql)
 
     def test_select_into_rejected(self) -> None:
-        with pytest.raises(ConnectorError, match="blockged token"):
+        with pytest.raises(ConnectorError, match="blocked token"):
             validate_readonly_select("SELECT * INTO OUTFILE 'file.txt' FROM t")
 
     def test_comment_rejected(self) -> None:
-        with pytest.raises(ConnectorError, match="blockged token"):
+        with pytest.raises(ConnectorError, match="blocked token"):
             validate_readonly_select("SELECT 1 -- comment")
 
 

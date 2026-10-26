@@ -108,8 +108,13 @@ def test_approve_pending_and_audit(session: Session) -> None:
 def test_reject_and_edit_approve(session: Session) -> None:
     rec_id = _seed(session, "draft_supplier_message")
     rec = approval_agent.decide(
-        session, rec_id, "edit_approve", actor_id="user-2", actor_role="purchaser",
-        edited_payload='{"qty": 200}', comment="adjusted qty",
+        session,
+        rec_id,
+        "edit_approve",
+        actor_id="user-2",
+        actor_role="purchaser",
+        edited_payload='{"qty": 200}',
+        comment="adjusted qty",
     )
     session.commit()
     assert rec.status == "approved"
@@ -131,8 +136,11 @@ def test_cannot_decide_non_pending(session: Session) -> None:
 def test_not_found(session: Session) -> None:
     with pytest.raises(approval_agent.TransitionError):
         approval_agent.decide(
-            session, "00000000-0000-0000-0000-000000000000", "approve",
-            actor_id="user-1", actor_role="planner",
+            session,
+            "00000000-0000-0000-0000-000000000000",
+            "approve",
+            actor_id="user-1",
+            actor_role="planner",
         )
 
 

@@ -203,3 +203,6 @@ def _raise_supplier_delay_alert(
             )
         else:
             existing.score = score
+            # Re-escalate severity when the risk moves across the 60 threshold;
+            # previously severity froze at the value from the first run.
+            existing.severity = "high" if result.risk_score >= 60 else "medium"

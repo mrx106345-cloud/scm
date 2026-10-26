@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,6 +23,7 @@ from app.chat.queries import (
     savings_report,
     supplier_summary,
 )
+from app.core.dependencies import require_role
 from app.db.models import Item, Supplier
 from app.db.session import SessionLocal
 from app.llm.intents import (
@@ -183,6 +184,9 @@ def ask(question: str) -> ChatAskResponse:
 
 
 @router.post("/chat/ask")
-def chat_ask(req: ChatAskRequest) -> ChatAskResponse:
+def chat_ask(
+    req: ChatAskRequest,
+    _user: dict[str, object] = Depends(require_role("viewer")),  # noqa: B008
+) -> ChatAskResponse:
     """Answer a free-text question via match -> fixed query -> facts."""
     return ask(req.question)

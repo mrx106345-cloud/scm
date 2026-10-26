@@ -6,7 +6,6 @@ import httpx
 import pytest
 
 from app.connectors.sap_b1 import (
-    ITEM_MAP,
     SapError,
     import_business_partners,
     import_items,
@@ -126,7 +125,7 @@ class TestImportItems:
         assert result.accepted[0]["uom"] == "NOS"
 
     def test_custom_field_map(self) -> None:
-        client = httpx.Client(transport=_make_handler({"/Items": ITEMS_PAGE}))
+        httpx.Client(transport=_make_handler({"/Items": ITEMS_PAGE}))
         from app.connectors.sap_b1 import _map_fields
 
         raw = {"ItemCode": "X-1", "ItemName": "Test Item"}
@@ -136,9 +135,7 @@ class TestImportItems:
 
 class TestImportBusinessPartners:
     def test_import_all_valid(self) -> None:
-        client = httpx.Client(
-            transport=_make_handler({"/BusinessPartners": BP_PAGE})
-        )
+        client = httpx.Client(transport=_make_handler({"/BusinessPartners": BP_PAGE}))
         result = import_business_partners(client, "http://localhost:50000")
 
         assert len(result.accepted) == 2

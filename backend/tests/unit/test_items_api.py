@@ -94,9 +94,7 @@ def _seed_po(
     )
     session.add(po)
     session.flush()
-    session.add(
-        PoLine(po_id=po.id, item_id=item_id, qty_ordered=50.0)
-    )
+    session.add(PoLine(po_id=po.id, item_id=item_id, qty_ordered=50.0))
     session.flush()
     return po.id
 
@@ -136,7 +134,9 @@ def test_get_item_detail_returns_parameters(monkeypatch: pytest.MonkeyPatch) -> 
 
     app = create_app()
     app.dependency_overrides[get_current_user] = lambda: {
-        "id": "user-1", "username": "user-1", "role": "viewer"
+        "id": "user-1",
+        "username": "user-1",
+        "role": "viewer",
     }
     client = TestClient(app)
     resp = client.get(f"/api/v1/items/{item_id}")
@@ -160,7 +160,9 @@ def test_get_item_detail_with_forecast_and_alerts_and_pos(monkeypatch: pytest.Mo
 
     app = create_app()
     app.dependency_overrides[get_current_user] = lambda: {
-        "id": "user-1", "username": "user-1", "role": "viewer"
+        "id": "user-1",
+        "username": "user-1",
+        "role": "viewer",
     }
     client = TestClient(app)
     resp = client.get(f"/api/v1/items/{item_id}")
@@ -182,7 +184,9 @@ def test_get_item_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
 
     app = create_app()
     app.dependency_overrides[get_current_user] = lambda: {
-        "id": "user-1", "username": "user-1", "role": "viewer"
+        "id": "user-1",
+        "username": "user-1",
+        "role": "viewer",
     }
     client = TestClient(app)
     resp = client.get("/api/v1/items/00000000-0000-0000-0000-000000000000")
@@ -197,7 +201,9 @@ def test_get_item_denied_for_unknown_role(monkeypatch: pytest.MonkeyPatch) -> No
 
     app = create_app()
     app.dependency_overrides[get_current_user] = lambda: {
-        "id": "user-1", "username": "user-1", "role": "auditor"
+        "id": "user-1",
+        "username": "user-1",
+        "role": "auditor",
     }
     client = TestClient(app)
     resp = client.get(f"/api/v1/items/{item_id}")

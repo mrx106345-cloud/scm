@@ -57,8 +57,13 @@ def expected_shortage(available: float, mu: float, sd: float) -> float:
     return sd * (_NORM.pdf(z_a) - z_a * (1.0 - _NORM.cdf(z_a)))
 
 
-def days_of_cover_float(on_hand: float, allocated: float, d: float) -> float:
-    """DOC = (on_hand - allocated) / d; 0 when d <= 0."""
+def days_of_cover_float(on_hand: float, allocated: float, d: float) -> float | None:
+    """DOC = (on_hand - allocated) / d; None when demand is zero.
+
+    Per evaluation-dataset.json INV-06 and the golden clarification: a
+    zero-demand item has no cover days (null) and must raise no stockout
+    alert; only the API caller decides how null is serialized.
+    """
     if d <= 0:
-        return 0.0
+        return None
     return (on_hand - allocated) / d

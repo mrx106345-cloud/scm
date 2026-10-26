@@ -84,17 +84,14 @@ def _fetch_page(client: httpx.Client, endpoint: str, skip: int = 0) -> dict[str,
     except httpx.RequestError as exc:
         raise SapError(f"SAP Service Layer request failed: {exc}") from exc
     except httpx.HTTPStatusError as exc:
-        raise SapError(
-            f"SAP Service Layer returned {exc.response.status_code}"
-        ) from exc
-    return resp.json()
+        raise SapError(f"SAP Service Layer returned {exc.response.status_code}") from exc
+    data: dict[str, Any] = resp.json()
+    return data
 
 
 def import_items(client: httpx.Client, base_url: str) -> SapImportResult:
     """Import SAP B1 Items into canonical item records."""
-    return _import_generic(
-        client, f"{base_url.rstrip('/')}/Items", ITEM_MAP, "items", ["sku"]
-    )
+    return _import_generic(client, f"{base_url.rstrip('/')}/Items", ITEM_MAP, "items", ["sku"])
 
 
 def import_business_partners(client: httpx.Client, base_url: str) -> SapImportResult:

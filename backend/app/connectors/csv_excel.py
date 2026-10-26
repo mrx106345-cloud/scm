@@ -49,7 +49,7 @@ def sanitize_export_cell(value: str) -> str:
     return value
 
 
-def import_csv(entity: str, path: str | Path, mapping: dict[str, str]) -> dict:
+def import_csv(entity: str, path: str | Path, mapping: dict[str, str]) -> dict[str, object]:
     """Import a CSV with user-column -> canonical mapping.
 
     Returns {accepted, rejected:[{row, reason}], file_hash, natural_keys}.
@@ -60,9 +60,9 @@ def import_csv(entity: str, path: str | Path, mapping: dict[str, str]) -> dict:
     p = Path(path)
     raw = p.read_bytes()
     file_hash = hashlib.sha256(raw).hexdigest()
-    accepted: list[dict] = []
-    rejected: list[dict] = []
-    seen: set[tuple] = set()
+    accepted: list[dict[str, str]] = []
+    rejected: list[dict[str, str | int]] = []
+    seen: set[tuple[str, ...]] = set()
     with open(p, newline="", encoding="utf-8-sig") as f:
         for lineno, row in enumerate(csv.DictReader(f), start=2):
             canon = {cf: clean_cell(row.get(uc, "")) for cf, uc in mapping.items()}

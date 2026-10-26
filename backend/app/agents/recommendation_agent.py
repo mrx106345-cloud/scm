@@ -28,9 +28,9 @@ class SupplierMessage:
 
 def _round_up_to_lot(qty: float, lot_multiple: float) -> float:
     if lot_multiple and lot_multiple > 0:
-        steps = (
-            Decimal(str(qty)) / Decimal(str(lot_multiple))
-        ).to_integral_value(rounding=ROUND_UP)
+        steps = (Decimal(str(qty)) / Decimal(str(lot_multiple))).to_integral_value(
+            rounding=ROUND_UP
+        )
         return float(steps * Decimal(str(lot_multiple)))
     return qty
 
@@ -105,9 +105,7 @@ def create_recommendations(session: Session) -> list[Recommendation]:
 
     for alert in alerts:
         item = session.get(Item, alert.item_id) if alert.item_id else None
-        supplier = (
-            session.get(Supplier, alert.supplier_id) if alert.supplier_id else None
-        )
+        supplier = session.get(Supplier, alert.supplier_id) if alert.supplier_id else None
 
         if alert.type == "stockout_risk":
             if item is None or supplier is None:

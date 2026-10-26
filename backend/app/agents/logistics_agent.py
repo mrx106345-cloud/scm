@@ -108,9 +108,7 @@ def _raise_late_alert(session: Session, shipment: Shipment) -> None:
     # Resolve the exposed item through the PO's first line for the alert row.
     from app.db.models import PoLine
 
-    line = session.scalar(
-        select(PoLine).where(PoLine.po_id == shipment.po_id).order_by(PoLine.id)
-    )
+    line = session.scalar(select(PoLine).where(PoLine.po_id == shipment.po_id).order_by(PoLine.id))
     if line is None:
         return
     session.add(

@@ -40,7 +40,7 @@ def create_access_token(
 def decode_access_token(token: str) -> dict[str, Any] | None:
     """Verify and decode a JWT access token. Returns payload or None if invalid."""
     try:
-        payload = jwt.decode(token, settings.session_secret, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = jwt.decode(token, settings.session_secret, algorithms=[ALGORITHM])
     except jwt.PyJWTError:
         return None
     if payload.get("typ") != ACCESS_TOKEN_SUBJECT:

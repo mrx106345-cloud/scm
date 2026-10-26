@@ -16,3 +16,7 @@ jobs:
         run: mypy ./backend/app/core ./backend/app/agents ./backend/app/forecasting
       - name: Tests
         run: pytest ./backend -q
+      - name: Security lint
+        run: bandit -q -r ./backend/app
+      - name: Dependency audit
+        run: pip-audit --progress-bar=off

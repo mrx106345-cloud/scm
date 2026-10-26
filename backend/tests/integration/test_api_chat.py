@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 import app.api.chat as chat_mod
 from app.db.models import Alert, Base, Item, Supplier
 from app.main import create_app
+from tests.helpers import override_auth
 
 
 @pytest.fixture()
@@ -55,8 +56,10 @@ def client() -> TestClient:
 
     real_local = chat_mod.SessionLocal
     chat_mod.SessionLocal = lambda: maker()  # noqa: E731
+    app = create_app()
+    override_auth(app, role="viewer")
     try:
-        yield TestClient(create_app())
+        yield TestClient(app)
     finally:
         chat_mod.SessionLocal = real_local
 

@@ -38,9 +38,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.CheckConstraint(
-            "status IN ('new','confirmed','dismissed')", name="ck_note_status"
-        ),
+        sa.CheckConstraint("status IN ('new','confirmed','dismissed')", name="ck_note_status"),
     )
     op.create_index("ix_notes_inbox_supplier_id", "notes_inbox", ["supplier_id"])
 

@@ -114,10 +114,10 @@ def _handle_note_error(exc: notes_service.NoteError) -> HTTPException:
 )
 def receive_note(
     body: NoteInRequest,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> NoteOut:
     """Receive one supplier notice; stored as untrusted text, status new."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require(role, ("planner", "purchaser"))
     session = SessionLocal()
     try:
@@ -137,9 +137,11 @@ def receive_note(
 
 
 @router.get("/notes", response_model=list[NoteOut])
-def list_notes(user: dict = Depends(get_current_user)) -> list[NoteOut]:  # noqa: B008
+def list_notes(
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
+) -> list[NoteOut]:
     """List inboxed notes, newest first, with status and extraction suggestion."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require(role, ("planner", "purchaser"))
     session = SessionLocal()
     try:
@@ -153,10 +155,10 @@ def list_notes(user: dict = Depends(get_current_user)) -> list[NoteOut]:  # noqa
 def confirm_note(
     note_id: str,
     body: ConfirmRequest,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> ConfirmResponse:
     """Planner confirms a note: only the human-supplied values are applied."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require(role, ("planner",))
     session = SessionLocal()
     try:
@@ -187,10 +189,10 @@ def confirm_note(
 @router.post("/notes/{note_id}/dismiss", response_model=DismissResponse)
 def dismiss_note(
     note_id: str,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> DismissResponse:
     """Dismiss a note (planner or purchaser)."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require(role, ("planner", "purchaser"))
     session = SessionLocal()
     try:

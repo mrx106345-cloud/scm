@@ -6,7 +6,10 @@ All times are UTC internally.
 
 from __future__ import annotations
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_DEV_SESSION_SECRET = "dev-only-secret-change-in-prod"  # noqa: S105
 
 
 class Settings(BaseSettings):
@@ -22,7 +25,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./scm_dev.db"
 
     # Session / auth (dev default only; prod overrides via SCM_SESSION_SECRET env)
-    session_secret: str = "dev-only-secret-change-in-prod"  # noqa: S105
+    session_secret: str = _DEV_SESSION_SECRET  # noqa: S105
     session_idle_minutes: int = 30
     session_absolute_hours: int = 12
     password_min_length: int = 12
@@ -58,6 +61,16 @@ class Settings(BaseSettings):
     outbox_dir: str = "./data/outbox"
 
     currency: str = "INR"
+
+    @model_validator(mode="after")
+    def _fail_fast_on_insecure_prod(self) -> Settings:
+        """Refuse to start prod with the development session secret."""
+        if self.environment == "prod" and self.session_secret == _DEV_SESSION_SECRET:
+            raise ValueError(
+                "SCM_SESSION_SECRET must be set when SCM_ENVIRONMENT=prod; "
+                "refusing to sign sessions with the built-in dev secret"
+            )
+        return self
 
 
 settings = Settings()

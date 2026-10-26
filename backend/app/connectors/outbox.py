@@ -39,8 +39,14 @@ def _filename(display_id: int, file_type: FileType, stamp: str) -> str:
 
 
 def _rec_rows(rec: Recommendation) -> list[dict[str, str]]:
-    """One row per recommendation: base fields plus recommendation payload keys."""
-    payload = json.loads(rec.payload or "{}")
+    """One row per recommendation: base fields plus the effective payload.
+
+    The effective payload is the human-edited payload when the planner used
+    edit_approve, otherwise the original computed payload — the export must
+    always reflect what was approved, never the pre-edit numbers.
+    """
+    raw = rec.edited_payload or rec.payload or "{}"
+    payload: object = json.loads(raw)
     row: dict[str, str] = {
         "recommendation_id": rec.id,
         "display_id": str(rec.display_id),

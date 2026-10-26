@@ -51,11 +51,11 @@ class ItemDetailOut(BaseModel):
 @router.get("/items/{item_id}", response_model=ItemDetailOut)
 def get_item(
     item_id: str,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> ItemDetailOut:
     """Item detail page: parameters (SS, ROP, Q, service level), forecast,
     alert history, open POs (spec P3-07 item page)."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     if role not in ("admin", "planner", "purchaser", "viewer"):
         raise HTTPException(status_code=403, detail="forbidden")
     session = SessionLocal()
@@ -73,9 +73,7 @@ def get_item(
 
         # Alert history for this item, newest first.
         alert_rows = session.scalars(
-            select(Alert)
-            .where(Alert.item_id == item_id)
-            .order_by(Alert.created_at.desc())
+            select(Alert).where(Alert.item_id == item_id).order_by(Alert.created_at.desc())
         ).all()
         alert_history: list[dict[str, Any]] = [
             {

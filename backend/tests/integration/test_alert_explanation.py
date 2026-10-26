@@ -15,6 +15,7 @@ from sqlalchemy.pool import StaticPool
 import app.api.catalog as catalog_mod
 from app.db.models import Alert, Base, Item, Supplier
 from app.main import create_app
+from tests.helpers import override_auth
 
 
 @pytest.fixture()
@@ -59,7 +60,9 @@ def seeded_client() -> tuple[TestClient, str]:
     real_local = catalog_mod.SessionLocal
     catalog_mod.SessionLocal = lambda: maker()  # noqa: E731
     try:
-        yield TestClient(create_app()), alert_id
+        app = create_app()
+        override_auth(app, role="viewer")
+        yield TestClient(app), alert_id
     finally:
         catalog_mod.SessionLocal = real_local
 

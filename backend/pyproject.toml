@@ -54,6 +54,12 @@ dev = [
 requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+# Flat layout: only ship the app package; alembic/ are migrations, not an
+# importable distribution package (reproduced: setuptools otherwise errors
+# with "Multiple top-level packages discovered in a flat-layout").
+include = ["app*"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
@@ -69,6 +75,15 @@ ignore = ["S101"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# warn_unused_ignores: mypy 1.13 (pinned) needs the app/llm/backends.py
+# ignores, mypy 2.x flags them as unused. Tolerate until the pins move.
+warn_unused_ignores = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# lxml/openpyxl ship no py.typed marker; treat as Any (no new dev deps --
+# agent boundary: dependency additions need owner approval).
+module = ["lxml.*", "openpyxl.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

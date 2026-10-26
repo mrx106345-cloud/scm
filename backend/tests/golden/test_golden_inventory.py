@@ -11,6 +11,8 @@ import math
 from pathlib import Path
 from statistics import NormalDist
 
+import pytest
+
 from app.forecasting.inventory import (
     days_of_cover_float,
     expected_shortage,
@@ -70,6 +72,40 @@ def _compute(inp: dict) -> dict:
         "days_of_cover": doc,
         "days_to_stockout": doc,
     }
+
+
+_CASE_IDS = [c["id"] for c in DATA["inventory_calc"]]
+
+
+@pytest.mark.parametrize("cid", _CASE_IDS)
+def test_inventory_golden(cid: str) -> None:
+    """Full golden vector for every inventory_calc case in the dataset."""
+    c = _case(cid)
+    got = _compute(c["input"])
+    exp = c["expected"]
+
+    assert abs(got["z"] - exp["z"]) <= 0.01
+    assert abs(got["safety_stock"] - exp["safety_stock"]) <= 0.6
+    assert abs(got["reorder_point"] - exp["reorder_point"]) <= 0.6
+    assert got["order_qty"] == exp["order_qty"]
+    assert got["available_stock"] == exp["available_stock"]
+    assert abs(got["demand_mean_over_window"] - exp["demand_mean_over_window"]) <= 0.05
+    assert abs(got["demand_sd_over_window"] - exp["demand_sd_over_window"]) <= 0.05
+    assert abs(got["p_stockout"] - exp["p_stockout"]) <= c["tolerance"]["probability"] + 0.0005
+    assert abs(got["expected_shortage_units"] - exp["expected_shortage_units"]) <= 0.03
+    # Dataset loss is computed from the unrounded shortage, so the rounding of
+    # expected_shortage_units (2dp) can magnify into the loss; 4.0 absorbed that
+    # in INV-01 and is kept for every case.
+    assert abs(got["expected_loss"] - exp["expected_loss"]) <= 4.0
+    assert got["impact_per_unit"] == exp["impact_per_unit"]
+
+    # DOC: exact float match for positive demand, None per INV-06 zero-demand.
+    if exp["days_of_cover"] is None:
+        assert got["days_of_cover"] is None
+        assert got["days_to_stockout"] is None
+    else:
+        assert abs(got["days_of_cover"] - exp["days_of_cover"]) <= 0.01
+        assert abs(got["days_to_stockout"] - exp["days_to_stockout"]) <= 0.01
 
 
 def test_inv01_full_vector() -> None:

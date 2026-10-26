@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from app.api.auth import router as auth_router
 from app.api.catalog import router as catalog_router
@@ -14,23 +14,29 @@ from app.api.recommendations import router as recommendations_router
 from app.api.routes import router
 from app.api.suppliers import router as suppliers_router
 from app.config import settings
+from app.core.dependencies import verify_csrf
 from app.logging_setup import configure_logging
 
 configure_logging()
+
+# CSRF header required on every state-changing request (GET/HEAD/OPTIONS skip
+# inside the dependency itself). Cross-site requests cannot attach custom
+# headers without a preflight, and the session cookie is SameSite=Strict.
+_CSRF = [Depends(verify_csrf)]
 
 
 def create_app() -> FastAPI:
     """Build and return the FastAPI application."""
     app = FastAPI(title=settings.app_name, version=settings.app_version)
-    app.include_router(auth_router)
-    app.include_router(router)
-    app.include_router(catalog_router)
-    app.include_router(chat_router)
-    app.include_router(notes_router)
-    app.include_router(recommendations_router)
-    app.include_router(outbox_router)
-    app.include_router(suppliers_router)
-    app.include_router(items_router)
+    app.include_router(auth_router, dependencies=_CSRF)
+    app.include_router(router, dependencies=_CSRF)
+    app.include_router(catalog_router, dependencies=_CSRF)
+    app.include_router(chat_router, dependencies=_CSRF)
+    app.include_router(notes_router, dependencies=_CSRF)
+    app.include_router(recommendations_router, dependencies=_CSRF)
+    app.include_router(outbox_router, dependencies=_CSRF)
+    app.include_router(suppliers_router, dependencies=_CSRF)
+    app.include_router(items_router, dependencies=_CSRF)
 
     @app.get("/health")
     def health() -> dict[str, str]:

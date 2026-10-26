@@ -139,17 +139,13 @@ def _detect_period(text: str) -> str | None:
 
 
 # ---- intent discriminators -------------------------------------------------
-_EXPLAIN_RE = re.compile(
-    r"\bexplain\b[^\n]*\balert\b|\bwhy\b[^\n]*\balert\b", re.IGNORECASE
-)
+_EXPLAIN_RE = re.compile(r"\bexplain\b[^\n]*\balert\b|\bwhy\b[^\n]*\balert\b", re.IGNORECASE)
 _ALERT_ID_RE = re.compile(r"\balert\s+#?\d+", re.IGNORECASE)
 _ALERT_WORD_RE = re.compile(r"\balerts?\b", re.IGNORECASE)
 _SAVINGS_RE = re.compile(r"\bsav(?:e|ed|ing|ings)\b", re.IGNORECASE)
 _SUPPLIER_RE = re.compile(r"\bsupplier\b|\breliab\w*", re.IGNORECASE)
 _FORECAST_RE = re.compile(r"\bforecast\b", re.IGNORECASE)
-_ITEM_RE = re.compile(
-    r"\bitem\b|\bstatus\b|\bhow\s+is\b[^\n]*\bdoing\b", re.IGNORECASE
-)
+_ITEM_RE = re.compile(r"\bitem\b|\bstatus\b|\bhow\s+is\b[^\n]*\bdoing\b", re.IGNORECASE)
 _LEAD_KW_RE = re.compile(r"^(?:sku|item|part|part\s+number|product)\s+", re.IGNORECASE)
 
 
@@ -235,4 +231,3 @@ def match(text: str) -> ParsedQuery:
     if _ITEM_RE.search(text):
         return ParsedQuery(INTENT_ITEM_STATUS, _extract_item_target(text))
     return ParsedQuery(INTENT_UNKNOWN, None, _REASON_NO_MATCH)
-

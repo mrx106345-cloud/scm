@@ -130,9 +130,7 @@ class PurchaseOrder(Base):
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="open")
 
     __table_args__ = (
-        CheckConstraint(
-            "status IN ('open','partial','closed','cancelled')", name="ck_po_status"
-        ),
+        CheckConstraint("status IN ('open','partial','closed','cancelled')", name="ck_po_status"),
     )
 
 

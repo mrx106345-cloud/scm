@@ -21,7 +21,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api import notes as notes_api
 from app.connectors import notes as notes_service
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, verify_csrf
 from app.db.models import AuditLog, Base, Supplier
 from app.llm.extract import is_suspicious
 from app.llm.scripted import ScriptedBackend
@@ -60,12 +60,7 @@ def _seed_supplier(session: Session, code: str = "SUP-1") -> str:
 
 
 def _audit_events(session: Session, event_type: str) -> list[AuditLog]:
-    return (
-        session.query(AuditLog)
-        .filter_by(event_type=event_type)
-        .order_by(AuditLog.id)
-        .all()
-    )
+    return session.query(AuditLog).filter_by(event_type=event_type).order_by(AuditLog.id).all()
 
 
 # ---------------- service layer ----------------
@@ -146,9 +141,7 @@ def test_create_note_empty_text_rejected() -> None:
 def test_create_note_over_8000_chars_rejected() -> None:
     session = _session()
     with pytest.raises(notes_service.NoteError):
-        notes_service.create_note(
-            session, raw_text="x" * (notes_service.MAX_RAW_TEXT + 1)
-        )
+        notes_service.create_note(session, raw_text="x" * (notes_service.MAX_RAW_TEXT + 1))
     # exactly 8000 is accepted
     note = notes_service.create_note(session, raw_text="a" * notes_service.MAX_RAW_TEXT)
     assert note.status == "new"
@@ -168,10 +161,7 @@ def test_list_notes_newest_first() -> None:
 
 def test_get_note_missing() -> None:
     session = _session()
-    assert (
-        notes_service.get_note(session, "00000000-0000-0000-0000-000000000000")
-        is None
-    )
+    assert notes_service.get_note(session, "00000000-0000-0000-0000-000000000000") is None
 
 
 def test_confirm_note_applies_human_values_only() -> None:
@@ -282,9 +272,8 @@ def test_injection_notes_stored_never_applied() -> None:
     # Exactly one notes.receive per note, zero confirm/dismiss actions.
     from app.db.models import AuditLog
 
-    assert (
-        session.query(AuditLog).filter_by(event_type="notes.receive").count()
-        == len(INJECTION_NOTES)
+    assert session.query(AuditLog).filter_by(event_type="notes.receive").count() == len(
+        INJECTION_NOTES
     )
     assert len(_audit_events(session, "notes.confirm")) == 0
     assert len(_audit_events(session, "notes.dismiss")) == 0
@@ -303,6 +292,7 @@ def test_api_receive_note_roles(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     app = create_app()
     client = TestClient(app)
     for role in ("planner", "purchaser"):
+        app.dependency_overrides[verify_csrf] = lambda: None
         app.dependency_overrides[get_current_user] = lambda r=role: {
             "id": "user-1",
             "username": "user-1",
@@ -318,6 +308,7 @@ def test_api_receive_note_roles(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
         assert body["raw_text"] == "Alpha Steels: coil delayed by 12 days."
         assert body["suspicious"] is False
 
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -335,6 +326,7 @@ def test_api_receive_note_validation(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_session(monkeypatch, session)
     app = create_app()
     client = TestClient(app)
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -357,6 +349,7 @@ def test_api_receive_note_injection_flagged(monkeypatch: pytest.MonkeyPatch) -> 
     _patch_session(monkeypatch, session)
     app = create_app()
     client = TestClient(app)
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -399,6 +392,7 @@ def test_api_receive_note_extraction_flows_through(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(notes_service, "extract_notice", fake_extract)
     app = create_app()
     client = TestClient(app)
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-2",
         "username": "user-2",
@@ -424,18 +418,18 @@ def test_api_list_notes(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_session(monkeypatch, session)
     base = datetime(2026, 10, 17, 9, 0, 0, tzinfo=UTC)
     notes_service.create_note(session, raw_text="first", supplier_id="sup-1", now=base)
-    notes_service.create_note(
-        session, raw_text="second", now=base.replace(minute=base.minute + 1)
-    )
+    notes_service.create_note(session, raw_text="second", now=base.replace(minute=base.minute + 1))
     session.commit()
     app = create_app()
     client = TestClient(app)
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
         "role": "planner",
     }
     for role in ("planner", "purchaser"):
+        app.dependency_overrides[verify_csrf] = lambda: None
         app.dependency_overrides[get_current_user] = lambda r=role: {
             "id": "user-1",
             "username": "user-1",
@@ -465,6 +459,7 @@ def test_api_list_notes(monkeypatch: pytest.MonkeyPatch) -> None:
     assert resp.status_code == 200  # viewer (still the last override from loop)
 
     # viewer denied
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -475,6 +470,7 @@ def test_api_list_notes(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert resp.status_code == 403
 
+
 def test_api_confirm_note(monkeypatch: pytest.MonkeyPatch) -> None:
     session = _session()
     _patch_session(monkeypatch, session)
@@ -482,6 +478,7 @@ def test_api_confirm_note(monkeypatch: pytest.MonkeyPatch) -> None:
     session.commit()
     app = create_app()
     client = TestClient(app)
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "planner-1",
         "username": "planner-1",
@@ -502,6 +499,7 @@ def test_api_confirm_note(monkeypatch: pytest.MonkeyPatch) -> None:
     }
 
     # purchaser cannot confirm
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -514,6 +512,7 @@ def test_api_confirm_note(monkeypatch: pytest.MonkeyPatch) -> None:
     assert resp.status_code == 403
 
     # missing note
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "planner-1",
         "username": "planner-1",
@@ -526,6 +525,7 @@ def test_api_confirm_note(monkeypatch: pytest.MonkeyPatch) -> None:
     assert resp.status_code == 404
 
     # already confirmed
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "planner-1",
         "username": "planner-1",
@@ -556,6 +556,7 @@ def test_api_dismiss_note(monkeypatch: pytest.MonkeyPatch) -> None:
         (target_ids[0], "planner"),
         (target_ids[1], "purchaser"),
     ):
+        app.dependency_overrides[verify_csrf] = lambda: None
         app.dependency_overrides[get_current_user] = lambda r=role: {
             "id": "user-1",
             "username": "user-1",
@@ -568,6 +569,7 @@ def test_api_dismiss_note(monkeypatch: pytest.MonkeyPatch) -> None:
         assert resp.json()["note"]["status"] == "dismissed"
 
     # viewer denied
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",
@@ -578,6 +580,7 @@ def test_api_dismiss_note(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert resp.status_code == 403
     # missing note
+    app.dependency_overrides[verify_csrf] = lambda: None
     app.dependency_overrides[get_current_user] = lambda: {
         "id": "user-1",
         "username": "user-1",

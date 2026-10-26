@@ -6,6 +6,7 @@ tamper-evident audit log with the acting user. No LLM, no outbound calls.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Literal
 
@@ -69,6 +70,13 @@ def decide(
     rec.decision_comment = comment
     if decision == "edit_approve":
         if edited_payload is not None:
+            # Validate the edited payload is parseable JSON now, not at export time.
+            try:
+                json.loads(edited_payload)
+            except (ValueError, TypeError) as exc:
+                raise TransitionError(
+                    f"edited_payload is not valid JSON: {edited_payload[:50]}"
+                ) from exc
             rec.edited_payload = edited_payload
         rec.status = "approved"
         event_type = "recommendation.edit_approve"

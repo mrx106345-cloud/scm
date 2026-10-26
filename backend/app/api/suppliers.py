@@ -72,12 +72,12 @@ class Page(BaseModel):
 
 @router.get("/suppliers", response_model=Page)
 def list_suppliers(
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
 ) -> Page:
     """List suppliers with latest computed metrics (spec P3-07 supplier page)."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     if role not in ("admin", "planner", "purchaser", "viewer"):
         raise HTTPException(status_code=403, detail="forbidden")
     session = SessionLocal()
@@ -85,7 +85,7 @@ def list_suppliers(
         latest_subq = (
             select(
                 SupplierMetrics.supplier_id,
-                func.max(SupplierMetrics.id).label("latest_id"),
+                func.max(SupplierMetrics.computed_at).label("latest_ts"),
             )
             .group_by(SupplierMetrics.supplier_id)
             .subquery()
@@ -99,14 +99,19 @@ def list_suppliers(
                 )
                 .outerjoin(
                     SupplierMetrics,
-                    SupplierMetrics.id == latest_subq.c.latest_id,
+                    (SupplierMetrics.supplier_id == Supplier.id)
+                    & (SupplierMetrics.computed_at == latest_subq.c.latest_ts),
                 )
                 .order_by(Supplier.code)
             )
         ).all()
 
         items: list[SupplierMetricOut] = []
+        seen: set[str] = set()
         for sup, metrics in rows:
+            if sup.id in seen:
+                continue  # tie on computed_at: first row wins deterministically
+            seen.add(sup.id)
             items.append(
                 SupplierMetricOut(
                     id=sup.id,
@@ -138,10 +143,10 @@ def list_suppliers(
 @router.get("/suppliers/{supplier_id}", response_model=SupplierDetailOut)
 def get_supplier(
     supplier_id: str,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> SupplierDetailOut:
     """Supplier detail page: risk breakdown, lead-time trend, items exposed."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     if role not in ("admin", "planner", "purchaser", "viewer"):
         raise HTTPException(status_code=403, detail="forbidden")
     session = SessionLocal()
@@ -150,11 +155,11 @@ def get_supplier(
         if sup is None:
             raise HTTPException(status_code=404, detail="supplier not found")
 
-        # Latest metrics row.
+        # Latest metrics row: by computed_at (id only as a deterministic tiebreak).
         metrics = session.scalars(
             select(SupplierMetrics)
             .where(SupplierMetrics.supplier_id == supplier_id)
-            .order_by(SupplierMetrics.id.desc())
+            .order_by(SupplierMetrics.computed_at.desc(), SupplierMetrics.id.desc())
         ).first()
 
         metrics_out: dict[str, object] | None = None
@@ -180,9 +185,7 @@ def get_supplier(
                 "drift_component": round(0.40 * clip, 4),
                 "on_time_component": round(0.35 * (1.0 - otr), 4),
                 "dependency_component": round(0.25 * dep, 4),
-                "total_raw": round(
-                    0.40 * clip + 0.35 * (1.0 - otr) + 0.25 * dep, 4
-                ),
+                "total_raw": round(0.40 * clip + 0.35 * (1.0 - otr) + 0.25 * dep, 4),
             }
 
         # Lead-time trend: receipt lead days over time (oldest first).

@@ -87,7 +87,7 @@ def _out(rec: Recommendation) -> RecommendationOut:
 
 @router.get("/recommendations")
 def list_recommendations(
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
     status: str | None = Query(default=None),
@@ -95,7 +95,7 @@ def list_recommendations(
     supplier_id: str | None = Query(default=None),
 ) -> Page:
     """List recommendations with optional status/action_type/supplier_id filters."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     if role not in ("admin", "planner", "purchaser", "viewer"):
         raise HTTPException(status_code=403, detail="forbidden")
     session = SessionLocal()
@@ -121,9 +121,9 @@ def list_recommendations(
 @router.get("/recommendations/{rec_id}")
 def get_recommendation(
     rec_id: str,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> RecommendationOut:
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     if role not in ("admin", "planner", "purchaser", "viewer"):
         raise HTTPException(status_code=403, detail="forbidden")
     session = SessionLocal()
@@ -140,12 +140,12 @@ def get_recommendation(
 def decide_recommendation(
     rec_id: str,
     body: DecisionRequest,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> DecisionResponse:
     actor_id = user.get("id")
     if actor_id is None:
         raise HTTPException(status_code=401, detail="acting user required")
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     session = SessionLocal()
     try:
         try:
@@ -164,6 +164,8 @@ def decide_recommendation(
                 raise HTTPException(status_code=404, detail=msg) from exc
             if "cannot" in msg or "forbidden" in msg.lower():
                 raise HTTPException(status_code=403, detail=msg) from exc
+            if "not valid JSON" in msg:
+                raise HTTPException(status_code=400, detail=msg) from exc
             raise HTTPException(status_code=409, detail=msg) from exc
         session.commit()
         if rec.status == "approved":

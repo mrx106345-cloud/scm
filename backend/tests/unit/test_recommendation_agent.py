@@ -68,14 +68,24 @@ def _seed(session: Session, alert_type: str) -> str:
     site = Site(code="S1", name="Plant 1")
     sup = Supplier(code="SUP-1", name="Acme Steels", active=True)
     item = Item(
-        sku="BOLT-M8", name="Hex Bolt", uom="EA", criticality="A",
-        unit_cost=250.0, moq=100.0, lot_multiple=50.0, stockout_cost=1000.0,
+        sku="BOLT-M8",
+        name="Hex Bolt",
+        uom="EA",
+        criticality="A",
+        unit_cost=250.0,
+        moq=100.0,
+        lot_multiple=50.0,
+        stockout_cost=1000.0,
     )
     session.add_all([site, sup, item])
     session.flush()
     po = PurchaseOrder(
-        po_number="PO-100", supplier_id=sup.id, site_id=site.id,
-        order_date=_d(-10), promised_date=_d(15), status="open",
+        po_number="PO-100",
+        supplier_id=sup.id,
+        site_id=site.id,
+        order_date=_d(-10),
+        promised_date=_d(15),
+        status="open",
     )
     session.add(po)
     session.flush()
@@ -89,11 +99,19 @@ def _seed(session: Session, alert_type: str) -> str:
         )
     )
     session.flush()
-    session.add(Alert(
-        item_id=item.id, site_id=site.id, supplier_id=sup.id, type=alert_type,
-        severity="high", expected_loss=240000.0, score=80.0, status="open",
-        dedupe_key=f"alert:{alert_type}:1",
-    ))
+    session.add(
+        Alert(
+            item_id=item.id,
+            site_id=site.id,
+            supplier_id=sup.id,
+            type=alert_type,
+            severity="high",
+            expected_loss=240000.0,
+            score=80.0,
+            status="open",
+            dedupe_key=f"alert:{alert_type}:1",
+        )
+    )
     session.commit()
     return item.id
 
@@ -108,6 +126,7 @@ def test_create_recommendations_stockout_risk(session: Session) -> None:
     assert rec.status == "pending"
     assert rec.est_benefit == 240000.0
     import json
+
     payload = json.loads(rec.payload or "{}")
     assert payload["qty"] == 100.0  # moq fallback, lot 50 -> 100
 

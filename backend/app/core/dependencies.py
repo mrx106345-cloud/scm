@@ -6,11 +6,14 @@ reads the session cookie, verifies the JWT, and returns the current user.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
 
 from app.core.session import decode_access_token
+
+CSRF_HEADER_NAME = "x-csrf-token"
 
 
 def _extract_token(request: Request, session_cookie: str | None) -> str | None:
@@ -43,22 +46,45 @@ async def get_current_user(
             detail="invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return {
+    user: dict[str, str | None] = {
         "id": payload.get("sub"),
         "username": payload.get("username"),
         "role": payload.get("role"),
     }
+    return user
 
 
-def require_role(minimum_role: str):
+def require_role(
+    minimum_role: str,
+) -> Callable[..., dict[str, str | None]]:
     """Dependency factory: require the caller to have at least minimum_role."""
 
-    def _checker(user: dict[str, str | None] = Depends(get_current_user)) -> dict[str, str | None]:  # noqa: B008
+    def _checker(
+        user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
+    ) -> dict[str, str | None]:
         from app.core.security import can_access
 
-        user_role = user.get("role") or "viewer"
+        user_role = user.get("role") or ""
         if not can_access(user_role, minimum_role):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
         return user
 
     return _checker
+
+
+def verify_csrf(request: Request) -> None:
+    """Require the CSRF header on every state-changing request.
+
+    Cross-site requests cannot attach a custom header without a CORS
+    preflight (which this same-origin app never responds to), and the
+    session cookie is SameSite=Strict, so a non-empty header here is an
+    effective browser-CSRF control. Presence-only by design; the value is
+    not a shared secret.
+    """
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return
+    if not request.headers.get(CSRF_HEADER_NAME):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="missing CSRF token",
+        )

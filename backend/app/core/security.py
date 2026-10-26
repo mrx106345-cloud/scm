@@ -6,6 +6,8 @@ Sessions: HTTP-only Secure SameSite=Strict cookie + CSRF header (wired in P1-11)
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -44,22 +46,30 @@ def can_access(user_role: str, minimum_role: str) -> bool:
 
 
 class LockoutTracker:
-    """In-memory login failure tracker (persisted store lands with sessions)."""
+    """In-memory login failure tracker with a sliding lockout window."""
 
-    def __init__(self, max_failures: int = 5) -> None:
-        """Init with failure threshold."""
+    def __init__(self, max_failures: int = 5, window_minutes: int = 15) -> None:
+        """Init with failure threshold and the window failures stay counted in."""
         self.max_failures = max_failures
-        self._failures: dict[str, int] = {}
+        self.window = timedelta(minutes=window_minutes)
+        self._failures: dict[str, list[datetime]] = {}
 
     def record_failure(self, username: str) -> int:
-        """Record a failure; return current count."""
-        self._failures[username] = self._failures.get(username, 0) + 1
-        return self._failures[username]
+        """Record a failure; return current count inside the window."""
+        now = datetime.now(UTC)
+        history = [t for t in self._failures.get(username, []) if now - t < self.window]
+        history.append(now)
+        self._failures[username] = history
+        return len(history)
 
     def record_success(self, username: str) -> None:
         """Clear failures on success."""
         self._failures.pop(username, None)
 
     def is_locked(self, username: str) -> bool:
-        """Return True when failures reach threshold."""
-        return self._failures.get(username, 0) >= self.max_failures
+        """Return True when failures inside the window reach the threshold."""
+        now = datetime.now(UTC)
+        history = [t for t in self._failures.get(username, []) if now - t < self.window]
+        if history:
+            self._failures[username] = history
+        return len(history) >= self.max_failures

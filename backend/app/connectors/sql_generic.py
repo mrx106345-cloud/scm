@@ -11,6 +11,7 @@ which is validated before execution. Results are returned as list[dict].
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -37,9 +38,9 @@ BLOCKED_KEYWORDS: tuple[str, ...] = (
 
 # Blocked at the token level inside the query body.
 BLOCKED_TOKENS: tuple[str, ...] = (
-    "--",            # SQL comment
-    "/*",            # block comment start
-    "xp_",           # extended stored procs
+    "--",  # SQL comment
+    "/*",  # block comment start
+    "xp_",  # extended stored procs
     "INTO OUTFILE",  # MySQL file write
     "INTO DUMPFILE",
     "LOAD_FILE",
@@ -50,6 +51,8 @@ BLOCKED_TOKENS: tuple[str, ...] = (
     "DECLARE",
     "CURSOR",
 )
+
+log = logging.getLogger(__name__)
 
 MAX_DEFAULT_ROWS = 10_000
 MAX_DEFAULT_TIMEOUT_SECONDS = 30
@@ -110,7 +113,7 @@ def validate_readonly_select(sql: str, max_rows: int = MAX_DEFAULT_ROWS) -> str:
     # Blocked tokens (substring check).
     for tok in BLOCKED_TOKENS:
         if tok.upper() in upper:
-            raise ConnectorError(f"blockged token: {tok}")
+            raise ConnectorError(f"blocked token: {tok}")
 
     # Disallow SELECT ... INTO (file/outfile variants already blocked by token).
     if re.search(r"\bINTO\b", upper):
@@ -139,17 +142,16 @@ def execute_readonly(
             try:
                 conn.execute(text("SET TRANSACTION READ ONLY"))
             except Exception:
-                # Not all dialects support SET TRANSACTION READ ONLY; ignore.
-                pass
+                # Not all dialects support SET TRANSACTION READ ONLY; log and
+                # continue (the SELECT-only validator is the primary control).
+                log.debug("read_only_not_enforced", exc_info=True)
 
             try:
-                conn.execute(
-                    text(f"SET STATEMENT_TIMEOUT = {timeout_seconds * 1000}")
-                )
+                conn.execute(text(f"SET STATEMENT_TIMEOUT = {timeout_seconds * 1000}"))
             except Exception:
-                pass
+                log.debug("statement_timeout_not_enforced", exc_info=True)
 
-            result: Result = conn.execute(text(validated))
+            result: Result[Any] = conn.execute(text(validated))
             columns = list(result.keys())
             raw_rows = result.fetchmany(max_rows + 1)
 
@@ -162,7 +164,7 @@ def execute_readonly(
     rows = raw_rows[:max_rows]
 
     return QueryResult(
-        rows=[dict(zip(columns, row)) for row in rows],
+        rows=[dict(zip(columns, row, strict=True)) for row in rows],
         row_count=len(rows),
         truncated=truncated,
         columns=columns,

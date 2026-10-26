@@ -13,7 +13,6 @@ Tally ERP 9 / Prime exports data via TDL-generated XML. This connector:
 from __future__ import annotations
 
 import hashlib
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -112,9 +111,7 @@ def import_tally_ledgers(
         canon = _map_fields(raw_fields, field_map)
         missing = [f for f in required if not canon.get(f)]
         if missing:
-            rejected.append(
-                {"row": idx, "reason": f"missing required field: {','.join(missing)}"}
-            )
+            rejected.append({"row": idx, "reason": f"missing required field: {','.join(missing)}"})
             continue
         accepted.append(canon)
 
@@ -146,9 +143,7 @@ def import_tally_stock_items(
         canon = _map_fields(raw_fields, field_map)
         missing = [f for f in required if not canon.get(f)]
         if missing:
-            rejected.append(
-                {"row": idx, "reason": f"missing required field: {','.join(missing)}"}
-            )
+            rejected.append({"row": idx, "reason": f"missing required field: {','.join(missing)}"})
             continue
         accepted.append(canon)
 

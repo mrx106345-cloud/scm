@@ -40,4 +40,6 @@ def unit_cost_jump(old: float, new: float) -> bool:
     """True when unit_cost changes by more than 10x between loads."""
     if old == 0:
         return new != 0
+    if new == 0:
+        return True  # a drop to zero is itself a >10x jump, not ZeroDivisionError
     return max(old, new) / min(old, new) > 10

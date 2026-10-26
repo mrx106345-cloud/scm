@@ -5,12 +5,7 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import pytest
-from lxml import etree
-
 from app.connectors.tally import (
-    LEDGER_MAP,
-    TallyError,
     import_tally_ledgers,
     import_tally_purchase_orders,
     import_tally_stock_items,

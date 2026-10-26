@@ -56,14 +56,23 @@ def _seed_late_shipment(session: Session) -> Shipment:
     site = Site(code="S1", name="Plant 1")
     sup = Supplier(code="SUP-1", name="Late Corp", active=True)
     item = Item(
-        sku="A-1", name="Part", uom="EA", criticality="A",
-        unit_cost=10.0, moq=1, lot_multiple=1,
+        sku="A-1",
+        name="Part",
+        uom="EA",
+        criticality="A",
+        unit_cost=10.0,
+        moq=1,
+        lot_multiple=1,
     )
     session.add_all([site, sup, item])
     session.flush()
     po = PurchaseOrder(
-        po_number="PO-1", supplier_id=sup.id, site_id=site.id,
-        order_date=_d(-10), promised_date=_d(20), status="open",
+        po_number="PO-1",
+        supplier_id=sup.id,
+        site_id=site.id,
+        order_date=_d(-10),
+        promised_date=_d(20),
+        status="open",
     )
     session.add(po)
     session.flush()
@@ -72,8 +81,14 @@ def _seed_late_shipment(session: Session) -> Shipment:
     )
     session.flush()
     return Shipment(
-        po_id=po.id, reference="REF-1", carrier="C1", origin="O", destination="D",
-        ship_date=_d(-5), eta=_d(-1), status="in_transit",
+        po_id=po.id,
+        reference="REF-1",
+        carrier="C1",
+        origin="O",
+        destination="D",
+        ship_date=_d(-5),
+        eta=_d(-1),
+        status="in_transit",
     )
 
 

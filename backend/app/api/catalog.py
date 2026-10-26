@@ -7,9 +7,10 @@ contract-correct shapes so frontend + contract tests proceed.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
 
+from app.core.dependencies import require_role
 from app.db.models import Alert, Item, Supplier
 from app.db.session import SessionLocal
 from app.llm.explainer import explain_alert as llm_explain_alert
@@ -45,19 +46,21 @@ class Page(BaseModel):
 
 @router.get("/alerts")
 def list_alerts(
+    _user: dict[str, object] = Depends(require_role("viewer")),  # noqa: B008
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
 ) -> Page:
-    """List alerts with pagination (filters land with persistence)."""
+    """List alerts with pagination (full A4 shape needs alert fact columns)."""
     return Page(items=[], page=page, page_size=page_size, total=0)
 
 
 @router.get("/items")
 def list_items(
+    _user: dict[str, object] = Depends(require_role("viewer")),  # noqa: B008
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
 ) -> Page:
-    """List items with pagination."""
+    """List items with pagination (full A4 shape needs alert fact columns)."""
     return Page(items=[], page=page, page_size=page_size, total=0)
 
 
@@ -68,13 +71,17 @@ class RunRequest(BaseModel):
 
 
 @router.post("/pipeline/run", status_code=202)
-def trigger_run() -> dict[str, str]:
+def trigger_run(
+    _user: dict[str, object] = Depends(require_role("planner")),  # noqa: B008
+) -> dict[str, str]:
     """Trigger a pipeline run (queued; worker executes in P1-10 full)."""
     return {"status": "queued"}
 
 
 @router.get("/pipeline/runs")
-def list_runs() -> Page:
+def list_runs(
+    _user: dict[str, object] = Depends(require_role("planner")),  # noqa: B008
+) -> Page:
     """List pipeline runs."""
     return Page(items=[], page=1, page_size=25, total=0)
 
@@ -126,7 +133,10 @@ def _facts_for_alert(alert: Alert) -> AlertExplanationFacts:
 
 
 @router.get("/alerts/{alert_id}/explanation")
-def alert_explanation(alert_id: str) -> ExplanationResponse:
+def alert_explanation(
+    alert_id: str,
+    _user: dict[str, object] = Depends(require_role("viewer")),  # noqa: B008
+) -> ExplanationResponse:
     """Return the deterministic alert explanation (template-backed offline)."""
     session = SessionLocal()
     try:

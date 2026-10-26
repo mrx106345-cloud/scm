@@ -152,4 +152,3 @@ def test_run_upserts_metrics_and_alerts(session: Session) -> None:
     session.commit()
     assert len(session.query(Alert).all()) == 1
     assert len(session.query(SupplierMetrics).all()) == 2
-

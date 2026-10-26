@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("payload", sa.Text, nullable=True),
         sa.Column("est_cost", sa.Numeric(18, 2), nullable=True),
         sa.Column("est_benefit", sa.Numeric(18, 2), nullable=True),
-        sa.Column(
-            "benefit_label", sa.String(16), nullable=False, server_default="estimate"
-        ),
+        sa.Column("benefit_label", sa.String(16), nullable=False, server_default="estimate"),
         sa.Column("autonomy_level", sa.Integer, nullable=False, server_default="2"),
         sa.Column("status", sa.String(16), nullable=False, server_default="pending"),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),

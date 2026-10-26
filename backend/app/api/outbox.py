@@ -48,10 +48,10 @@ def _is_inside(path: Path, root: Path) -> bool:
 
 @router.get("/outbox", response_model=list[OutboxFileOut])
 def list_outbox(
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> list[OutboxFileOut]:
     """List generated outbox files (name, type, created_at, recommendation_id)."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require_planner_or_purchaser(role)
     session = SessionLocal()
     try:
@@ -73,10 +73,10 @@ def list_outbox(
 @router.get("/outbox/{file_id}/download")
 def download_outbox(
     file_id: str,
-    user: dict = Depends(get_current_user),  # noqa: B008
+    user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
 ) -> FileResponse:
     """Download an outbox file; every download is audited."""
-    role = user.get("role") or "viewer"
+    role = user.get("role") or ""
     _require_planner_or_purchaser(role)
     session = SessionLocal()
     try:

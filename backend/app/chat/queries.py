@@ -15,7 +15,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import Alert, Item, Supplier
-from app.forecasting.inventory import days_of_cover_float
 from app.forecasting.methods import (
     croston_sba,
     moving_average,
@@ -41,11 +40,6 @@ def _alert_summary(alert: Alert, item: Item | None, supplier: Supplier | None) -
         "supplier": supplier.name if supplier else "",
         "created_at": alert.created_at.isoformat() if alert.created_at else None,
     }
-
-
-def _days_of_cover(series: list[float], avg_daily_demand: float) -> float:
-    """Days of physical cover = remaining on-hand / average demand, 0 when demand <= 0."""
-    return days_of_cover_float(0.0, 0.0, avg_daily_demand)
 
 
 def item_status(item: Item, session: Session) -> dict[str, Any]:
@@ -76,8 +70,8 @@ def list_alerts(severity: str | None, supplier: str | None, session: Session) ->
             s.id
             for s in session.scalars(select(Supplier).where(Supplier.name.ilike(f"%{supplier}%")))
         ]
-        if ids:
-            stmt = stmt.where(Alert.supplier_id.in_(ids))
+        # An unknown supplier must match nothing: zero rows, never all rows.
+        stmt = stmt.where(Alert.supplier_id.in_(ids))
     alerts = session.execute(stmt).scalars().all()
 
     items = {i.id: i for i in session.scalars(select(Item)).all()}

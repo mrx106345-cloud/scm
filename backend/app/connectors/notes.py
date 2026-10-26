@@ -63,9 +63,7 @@ def create_note(
         supplier_id=supplier_id,
         raw_text=raw_text,
         received_at=now,
-        extracted=(
-            json.dumps(extraction, sort_keys=True) if extraction is not None else None
-        ),
+        extracted=(json.dumps(extraction, sort_keys=True) if extraction is not None else None),
         status="new",
     )
     session.add(note)
@@ -90,9 +88,7 @@ def create_note(
 
 def list_notes(session: Session) -> list[NoteInbox]:
     """List notes, newest first."""
-    stmt = select(NoteInbox).order_by(
-        NoteInbox.received_at.desc(), NoteInbox.id.desc()
-    )
+    stmt = select(NoteInbox).order_by(NoteInbox.received_at.desc(), NoteInbox.id.desc())
     return list(session.scalars(stmt))
 
 

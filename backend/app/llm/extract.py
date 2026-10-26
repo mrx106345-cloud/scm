@@ -59,7 +59,9 @@ _SUSPICIOUS_RE = re.compile(
     r"|\bmark\s+it\s+executed\b"
     r"|\bdelete\s+(the\s+)?audit\s+log\b"
     r"|\b(forward|send)\b[\s\S]*?\b(stock\s*list|data|report)\b"
-    r"|<</NOTICE>>|<</ENDNOTICE>>|</notices?>",
+    # Delimiter escape attempts: the notice text must never carry a fence
+    # marker itself (opened, closing, or slashed closing variant).
+    r"|<<(?:/?END)?NOTICE>>|</notices?>",
     re.IGNORECASE,
 )
 
