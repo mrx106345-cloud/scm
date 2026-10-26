@@ -16,9 +16,9 @@ You are a senior software engineer and careful reviewer building the SCM Agent p
 4. `architecture.md` and `tech-stack.md` (how it is built, which libraries are allowed)
 5. `DEVELOPMENT_SPEC_scm_agent.md` (exact schema, formulas, agents, phases; the source of truth for logic)
 6. `api-spec.md`, `security-guardrails.md`, `permissions-map.yaml`
-7. `tasks.md` (your checklist), `rfc.md` (decisions already made and why)
-8. `test-suite-spec.md` and `evaluation-dataset.json` (how your work is judged)
-9. `incident-response.md`, `privacy-policy-ai.md` (operational and privacy rules your code must support)
+7. `tasks.md` (your checklist; NOT YET AUTHORED — "what to build" currently comes from `prd.md` + `BACKLOG.md` + owner go-aheads recorded in `PROGRESS.md`), decisions already made live in `DECISIONS.md` (a planned `rfc.md` was folded into it)
+8. `test-suite-spec.md` is NOT YET AUTHORED; how work is judged is `evaluation-dataset.json` + the test suite itself (`backend/tests`, `frontend/src/**/*.test.*`)
+9. `incident-response.md` and `privacy-policy-ai.md` are NOT YET AUTHORED; interim: `privacy` handling follows `security-guardrails.md` + the privacy constraints in `prd.md`; operational practice lives in `docs/`
 
 If two documents disagree, apply this priority: `security-guardrails.md` > `permissions-map.yaml` > `DEVELOPMENT_SPEC_scm_agent.md` > `architecture.md` > the rest. Record the conflict in `DECISIONS.md` and continue with the higher-priority document.
 

@@ -30,3 +30,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local SQLite dev databases (synthetic data, regenerated; never in git)
+*.db
+*.sqlite
+*.sqlite3

@@ -1,3 +1,7 @@
+# SCM Agent dev/stage stack: PostgreSQL + API container (build ../backend).
+# The scheduler/pipeline runner is not containerized yet (app.worker module
+# does not exist in this phase); removing the broken worker service rather
+# than shipping a service that cannot start (see DECISIONS.md).
 services:
   db:
     image: postgres:16
@@ -7,15 +11,24 @@ services:
       POSTGRES_DB: scm
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scm -d scm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   api:
     build: ../backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      # Postgres in this stack; SQLite remains a dev-only convenience.
+      SCM_DATABASE_URL: postgresql://scm:scm@db:5432/scm
+      SCM_ENVIRONMENT: prod
+      # Sessions must never be signed with the built-in dev secret in prod.
+      SCM_SESSION_SECRET: ${SCM_SESSION_SECRET:?Set SCM_SESSION_SECRET to a long random value}
     ports:
       - "8000:8000"
     depends_on:
-      - db
-  worker:
-    build: ../backend
-    command: python -m app.worker
+      db:
+        condition: service_healthy
 volumes:
   pgdata:

@@ -10,17 +10,14 @@ All licenses are permissive (MIT, BSD, Apache-2.0, or PSF) as required by `tech-
 | react | MIT | Frontend framework |
 | react-dom | MIT | DOM rendering |
 | react-router-dom | MIT | Routing (v7.18.4, upgraded from 6.28.0 per security audit) |
-| react-hook-form | MIT | Form handling |
 | react-hot-toast | MIT | Toast notifications |
-| zod | MIT | Schema validation |
 | @tanstack/react-query | MIT | Data fetching |
-| @tanstack/react-table | MIT | Data tables |
 | recharts | MIT | Charts |
 | tailwind-merge | MIT | Tailwind class merging |
 | clsx | MIT | Class name utility |
 | @tailwindcss/vite | MIT | Tailwind Vite plugin |
 | @testing-library/react | MIT | Testing |
-| @testing-library/j-dom | MIT | Testing |
+| @testing-library/jest-dom | MIT | Testing |
 | @testing-library/dom | MIT | Testing |
 | @testing-library/user-event | MIT | Testing |
 | @commitlint/cli | MIT | Commit linting |
@@ -44,7 +41,13 @@ All licenses are permissive (MIT, BSD, Apache-2.0, or PSF) as required by `tech-
 | Pydantic | MIT | Validation |
 | pydantic-settings | MIT | Settings management |
 | Alembic | MIT | Migrations |
-| psycopg | MIT | PostgreSQL driver |
+| psycopg | LGPL-3.0 | PostgreSQL driver (client lib; LGPL OK, not distributed as linked runtime copy) |
+| httpx | BSD-3 | HTTP client (localhost/dev only) |
+| APScheduler | MIT | In-process scheduler |
+| PuLP | MIT | Optimizer |
+| rapidfuzz | MIT | Fuzzy matching |
+| Jinja2 | BSD-3 | Prompt templates |
+| typer | MIT | CLI |
 | argon2-cffi | BSD-3 | Password hashing |
 | PyJWT | MIT | JWT tokens |
 | cryptography | MIT | Crypto library |
