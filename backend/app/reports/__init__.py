@@ -1,1 +1,1 @@
-"""SCM Agent $p package."""
+"""SCM Agent reports package."""

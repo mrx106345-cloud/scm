@@ -45,7 +45,9 @@ dev = [
   "freezegun==1.5.1",
   "respx==0.22.0",
   "ruff==0.8.4",
-  "mypy==1.13.2",
+  # 1.13.2 was never published on PyPI (the 1.13 line ends at 1.13.0); the
+  # wrong pin made every CI environment fail dependency resolution.
+  "mypy==1.13.0",
   "bandit==1.8.3",
   "pip-audit==2.7.3",
 ]

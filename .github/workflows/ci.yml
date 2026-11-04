@@ -9,7 +9,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install
-        run: pip install -e ./backend[dev]
+        run: pip install -e "./backend[dev]"
       - name: Lint
         run: ruff check ./backend
       - name: Types
