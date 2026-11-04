@@ -38,7 +38,7 @@ def _to_float(value: object) -> float | None:
     """Parse a fact value to float; None when it is not numeric."""
     if isinstance(value, bool):
         return None
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     if isinstance(value, str):
         cleaned = value.strip().lstrip(_CURRENCY_SYMBOLS).replace(",", "")

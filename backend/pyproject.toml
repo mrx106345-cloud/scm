@@ -73,6 +73,10 @@ ignore = ["S101"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B", "UP"]
 "tools/**" = ["S"]
+# S320: lxml XML parsing of ERP-supplied XML is the connector's job; the parser
+# is already hardened (resolve_entities=False, no_network=True) and the golden
+# tests cover malformed/hostile XML. Ignore the blanket rule, keep the mitigations.
+"app/connectors/tally.py" = ["S320"]
 
 [tool.mypy]
 python_version = "3.11"
