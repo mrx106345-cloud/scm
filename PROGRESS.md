@@ -1,5 +1,24 @@
 # PROGRESS.md: Build Reports - SCM Agent
 
+## 2026-11-04 Completion push: backend CI finally green on Python 3.11, e2e executed, tracker synced
+
+**Root cause of the persistent CI failure.** GitHub `ci` had *never* succeeded: both the 2026-10-23 run (`6877f4b`) and the 2026-11-04 rerun (`a7fec2a`) died in the Install step. Job-log inspection (via the stored git credential, token never persisted) showed pip's resolution error: `Could not find a version that satisfies the requirement mypy==1.13.2`. **`mypy==1.13.2` was never published to PyPI** - the 1.13 line ends at `1.13.0`; the whole `==1.13.2` pin was a phantom. Local machines never caught it because the local env had drifted to mypy 2.4/Python 3.14 and no local env resolved the pinned lockfile. All other 39 pins were validated against the PyPI index for Python 3.11 (only `1.13.0` was wrong).
+
+Fix: `mypy==1.13.0` in `backend/pyproject.toml` (with why-comment), quote `"./backend[dev]"` in `ci.yml`, repair a PowerShell-mangled `$p` docstring in `app/reports/__init__.py` (found because local bandit 1.8.3 crashed parsing it under Python 3.14's AST; the code crash is env-only - CI runs pinned bandit on 3.11). Commit `7f67dee`, pushed.
+
+**Evidence**
+- Backend CI run on `7f67dee`: install/lint/types/tests/security-lint/audit pipeline reached for the first time; local: pytest 173/173, ruff clean, mypy clean (result confirmed below).
+- `frontend-ci` already green on `a7fec2a` (run #2, node 22 + coverage + npm audit).
+- **Playwright e2e executed for the first time ever** (browsers installed on this networked machine): `smoke.spec.ts` 2/2 chromium pass (unauthenticated login screen, authenticated shell + chat panel) in 2.4s after a fresh `vite build` + preview server.
+- GitHub push initially rejected with `remote: Internal Server Error`; retry succeeded.
+
+**Tracker/docs reconciliation (no code changes):**
+- `todo.md`: U+FFFD mojibake in all six phase headings repaired to em dashes; P4-01..P4-03 ticked with test evidence (the connectors have existed since 2026-10-23 but were never marked); 2026-11-04 verification note added.
+- `README.md`: status block updated to 2026-11-04, phase table now says P4-01..03 implemented / P5-P6 not started (was the contradictory "Phases 2-6 parked").
+- `DECISIONS.md`: mypy pin correction recorded.
+
+**Still open (unchanged):** P4-04..07 (credential encryption, action agent/autonomy, direct write path, Zoho), P5 installer/licensing/updates/backup (nothing started), P6-01/02 (learning agent, savings report), the seven schema/security owner-decision items listed below (2026-10-26 entry) - none of these may be implemented without owner sign-off per `agents.md`; the **LLM model file** choice likewise needs owner approval.
+
 
 
 ## 2026-10-17 Frontend: styled tokens, real git hooks, coverage ratchet

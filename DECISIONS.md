@@ -248,3 +248,13 @@ Gates after the change, all exit 0: format, lint, `tsc 5.7.2 --noEmit`,
   on either version. This is a config-only change; the pinned-vs-modern
   toolchain decision itself is deferred to the owner (see
   SECURITY_FINDINGS.md / PROGRESS.md 2026-10-26).
+
+### 2026-11-04 - Completion push (CI green, e2e, tracker sync)
+
+- **Corrected the phantom `mypy==1.13.2` pin to `mypy==1.13.0`.** The version
+  was never published on PyPI (verified against the PyPI index: the
+  1.13 line ends at 1.13.0), so every GitHub `ci` run failed the Install step
+  with a resolution error while local envs (mypy 2.4) never resolved the
+  pinned series. Pin fixes of this kind are treated as defect fixes, not
+  dependency changes; no package was added or removed.
+
