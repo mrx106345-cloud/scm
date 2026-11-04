@@ -71,7 +71,7 @@ def compute_metrics(
     recent = mean(leads[-5:]) if n else None
     prior_window = leads[-15:-5]
     prior = mean(prior_window) if len(prior_window) >= 5 else None
-    if recent is not None and prior not in (None, 0.0):
+    if recent is not None and prior is not None and prior != 0.0:
         drift = (recent - prior) / prior
     else:
         drift = 0.0
