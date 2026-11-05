@@ -48,10 +48,10 @@ This file tracks the current work status for the SCM Agent project.
 - [x] P4-01 sql_generic connector with read-only guards (done 2026-10-23; read-only guard tests in tests/unit/test_sql_generic.py - non-SELECT, comments, SELECT INTO, row cap, blocked tokens)
 - [x] P4-02 Tally connector against recorded XML samples and mock server (done 2026-10-23; XML sample tests in tests/unit/test_tally.py - valid, malformed, empty, custom mapping)
 - [x] P4-03 SAP B1 read connector against mock Service Layer (done 2026-10-23; respx-driven tests in tests/unit/test_sap_b1.py - pagination, connection error, field mapping)
-- [ ] P4-04 Connector credential encryption and masked API responses
-- [ ] P4-05 Autonomy settings, level 3 limits and 30-day gate, action agent execution
-- [ ] P4-06 Direct write path for connectors that support it, disabled by default
-- [ ] P4-07 Optional Zoho connector with outbound warning
+- [x] P4-04 Connector credential encryption and masked API responses (done 2026-11-05; AES-256-GCM in app/core/crypto.py, mask_config on every response/audit payload, D3 secret scan in tests/unit/test_connectors_api.py)
+- [x] P4-05 Autonomy settings, level 3 limits and 30-day gate, action agent execution (done 2026-11-05; app/core/autonomy.py + app/agents/action_agent.py, 5 limits, explicit ack, auto-approved path audited; tests/unit/test_autonomy.py + test_action_agent.py)
+- [x] P4-06 Direct write path for connectors that support it, disabled by default (done 2026-11-05; SCM_ERP_WRITE_ENABLED + per-connector write_enabled, only zoho is write-capable; 20+ negative write cases in test_action_agent.py)
+- [x] P4-07 Optional Zoho connector with outbound warning (done 2026-11-05; app/connectors/zoho.py, disabled by default, HTTPS + host allowlist, mocked write tests in test_zoho.py)
 
 ## Phase 5 — Installer, licensing, updates, backup (out of scope)
 - [ ] P5-01 scmctl precheck with tier-fit suggestions and LLM speed test

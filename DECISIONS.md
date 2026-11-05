@@ -258,3 +258,26 @@ Gates after the change, all exit 0: format, lint, `tsc 5.7.2 --noEmit`,
   pinned series. Pin fixes of this kind are treated as defect fixes, not
   dependency changes; no package was added or removed.
 
+### 2026-11-05 - Phase 4 decisions
+
+- **AES-256-GCM for connector configs, key outside the database.**
+  Production supplies `SCM_CREDENTIAL_KEY` (base64 32 bytes); the dev
+  profile creates `data/keys/credentials.key` with 0600 permissions. GCM was
+  chosen over Fernet because it needs no extra dependency and gives
+  authenticated encryption with an explicit nonce.
+- **Only Zoho is write-capable in this release.** Tally, SAP B1, sql_generic
+  and CSV stay read-only regardless of the connector flag; the action agent
+  checks `WRITE_CAPABLE_TYPES`, so enabling a flag cannot create an
+  unimplemented write path.
+- **Write-back is double-gated.** `SCM_ERP_WRITE_ENABLED` (global, default
+  false) AND `connectors.write_enabled` (per row, default false) AND an
+  approved `create_draft_po`. Level 3 may auto-approve only through
+  `decide_execution`; the LLM is never consulted.
+- **Level 3 readiness = limits + 30 days; the explicit acknowledgment is
+  required by `set_level`, not by the readiness probe.** The earlier draft
+  deadlocked (readiness required the ack that enabling writes), so the ack is
+  written when the admin enables level 3 and is audited as
+  `autonomy.level3_acknowledged`.
+- **`pip-audit --progress-bar=off` was invalid for the pinned 2.7.3.**
+  Replaced with `--progress-spinner=off` (a defect fix in the CI recipe).
+

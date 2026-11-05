@@ -3,11 +3,11 @@
 On-premise, fully offline AI supply chain risk system for mid-size manufacturers.
 Spec: `DEVELOPMENT_SPEC_scm_agent.md`. Progress: `PROGRESS.md`. Decisions: `DECISIONS.md`.
 
-## Status (2026-11-04) — Phases 1-3 + ERP read connectors implemented; CI/e2e green
+## Status (2026-11-05) - Phases 1-4 implemented; CI/e2e green
 
-- **Tests:** backend 173/173 green (unit, integration, security, golden inventory 11/11 cases, golden alerts/classify); frontend 93/93 Vitest tests in 18 files; Playwright e2e 2/2 chromium smoke tests (ran for the first time 2026-11-04).
-- **CI:** GitHub Actions `ci` (Python 3.11: install/lint/mypy/pytest/bandit/pip-audit) and `frontend-ci` (node 22: lint, format, types, unit tests, coverage, audit, build, Playwright smoke) both green on `main`. The previous persistent `ci` failure was a phantom `mypy==1.13.2` pin (never published on PyPI; fixed 2026-11-04).
-- **Lint/types:** ruff clean, ruff format clean, mypy `app` clean (strict, 55 files). Frontend lint/format/type-check clean.
+- **Tests:** backend 251/251 green (unit, integration, security, golden inventory 11/11 cases, golden alerts/classify); frontend 93/93 Vitest tests in 18 files; Playwright e2e 2/2 chromium smoke tests (ran for the first time 2026-11-04).
+- **CI:** GitHub Actions `ci` (Python 3.11: install/lint/mypy/pytest/bandit/pip-audit) and `frontend-ci` (node 22: lint, format, types, unit tests, coverage, audit, build, Playwright smoke). Recorded CI defects fixed: phantom `mypy==1.13.2` pin, bandit B101/B105 findings, FastAPI 0.115 204 response-model assert, invalid `pip-audit` flag.
+- **Lint/types:** ruff clean, ruff format clean, mypy `app` clean (strict, 64 files). Frontend lint/format/type-check clean.
 - **Security-hardening (2026-10-26):** JSON-body login with lockout + full `auth.*` audit trail, RBAC deny-by-default on every router, CSRF header dependency app-wide, prod-secret fail-fast, live-ledger dashboard summary, outbox honors edited payloads, prompt-injection fence hardening, frontend auth client with same-origin hardening + global 401 redirect. See `SECURITY_FINDINGS.md`.
 - **Acceptance (A1-A3)** on synthetic data, `tools/simulate_acceptance.py`:
   - 200 items: A1 recall 0.833 (40/48 event-caused stockout detected), A2 false-risk 2.276 per 100 items per week (threshold <=3.0), A3 WAPE-beats-naive 0.785 (threshold >=0.70) — PASS.
@@ -52,11 +52,11 @@ Frontend layout: `src/features/{dashboard,suppliers,items,alerts,chat}` (feature
 | P1 core engine & foundation (currently) | models, audit, auth/RBAC, synth, import, quality, forecast, inventory, alerts, orchestrator, API, frontend, compose | **complete** (2026-10-13) |
 | P2 Local LLM explainer & chat | explanation UI, number validator, llm_bench | **implemented** (see `PROGRESS.md`; model file deferred) |
 | P3 Supplier risk, logistics, approvals | suppliers, logistics, approvals, outbox, notes | **complete** (2026-10-16, see `PROGRESS.md`) |
-| P4 Connectors & action agent | sql/Tally/SAP read-only, autonomy | **P4-01..03 connectors implemented** (2026-10-23, see `todo.md`); credential encryption, action agent/autonomy pending |
+| P4 Connectors & action agent | sql/Tally/SAP read-only, autonomy | **complete** (2026-11-05): read connectors, encrypted credentials, autonomy + action agent, optional Zoho |
 | P5 Installer, licensing, updates, backup | precheck, installer, license, backup | not started |
 | P6 Learning, savings, hardening, docs | savings, security review, final documentation | not started |
 
-All P1 acceptance thresholds (A1 >= 0.80, A2 <= 3.0, A3 >= 0.70) measured and met. Phase 4 action agent/autonomy, Phase 5 and Phase 6 remain (see `todo.md`); further PRD non-goals are parked in `BACKLOG.md`.
+All P1 acceptance thresholds (A1 >= 0.80, A2 <= 3.0, A3 >= 0.70) measured and met. Phase 5 and Phase 6 remain (see `todo.md`); further PRD non-goals are parked in `BACKLOG.md`.
 
 ## Notes
 - Alias files like `agents (1).md` removed; canonical names are authoritative.

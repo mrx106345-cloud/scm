@@ -1,5 +1,59 @@
 # PROGRESS.md: Build Reports - SCM Agent
 
+## 2026-11-05 Phase 4 complete: encrypted credentials, autonomy, action execution
+
+**Scope.** P4-04..P4-07 landed on branch `phase-4` after the owner approved all
+previously withheld decisions and the Qwen2.5-3B model. Backend suite grew from
+173 to **251 tests**; ruff and mypy are clean on every new module.
+
+**What was built**
+- **Credential encryption (P4-04).** `app/core/crypto.py`: AES-256-GCM
+  (nonce||ciphertext), key from `SCM_CREDENTIAL_KEY` (base64, 32 bytes) or a
+  0600 key file. Connector configs are only decrypted in memory for a call.
+  `mask_config` replaces secret-looking values with `***` in every API
+  response and audit payload.
+- **Autonomy (P4-05).** `app/core/autonomy.py`: levels 1/2/3 per action type,
+  the five Part I limits, a 30-day install gate (`system.installed_at`), an
+  explicit acknowledgment written to the audit log, and `decide_execution`
+  which never lets level 3 act outside the limits (it falls back to approval).
+- **Action agent (P4-05/P4-06).** `app/agents/action_agent.py` is the only exit
+  path. Gates, in order: role, state (pending at level 3 only with a passing
+  deterministic decision), target, global `SCM_ERP_WRITE_ENABLED`, connector
+  `write_enabled`, write-capable type, valid JSON payload. Every attempt,
+  including blocks and failures, writes an `actions` row and an audit entry.
+- **Connector admin API (P4-04/07).** Create/list/update/test with masked
+  configs, admin-only, duplicate names rejected, SAP `base_url` checked against
+  `SCM_SAP_ALLOWED_HOSTS`.
+- **Zoho (P4-07).** Off by default (`SCM_ZOHO_ENABLED=false`), HTTPS-only,
+  host must match `SCM_ZOHO_API_BASE`, explicit outbound warning, mocked
+  read/write tests. No network call happens in the test suite.
+- **Tables.** `connectors`, `actions`, `data_quality_runs` with migration
+  `0007_phase4` (applied locally against SQLite).
+
+**Acceptance evidence**
+- **D1 >= 15 negative write cases:** 20+ in `tests/unit/test_action_agent.py`
+  (viewer/unknown roles, four non-approved states, level 1/2 pending, level 3
+  over value/qty/supplier/criticality, global switch off, missing/unknown
+  connector, connector write off, read-only type, wrong action type,
+  connector exception/rejection).
+- **D2 >= 25 injection cases:** already covered by
+  `tests/unit/test_sql_generic.py` (30 rejected statements/tokens); unchanged.
+- **D3 secrets never leak:** `test_secret_never_reaches_logs_or_responses`
+  scans create/list/get/test responses, captured logs and every audit payload.
+- **D4 connector suites:** Tally/SAP/sql_generic suites unchanged and green;
+  Zoho runs against a mocked HTTP client. **Real-system verification still
+  required** for Tally, SAP B1 and Zoho field mappings against the customer's
+  live schema.
+
+**CI.** Frontend `lint-test-build` (including Playwright) is green on `main`.
+Backend `ci` reached the security step for the first time on `a387b32`; the
+only remaining failure was an invalid `pip-audit --progress-bar=off` flag,
+fixed to `--progress-spinner=off` in `f3dc869`.
+
+**Still open:** P5 (installer/licensing/updates/backup) and P6 (learning,
+savings, docs) plus the approved schema/toolchain items (Decimal money,
+dedupe/lock, TZ columns + revocation, A4 alert shape, DQ persistence).
+
 ## 2026-11-04 Completion push: backend CI finally green on Python 3.11, e2e executed, tracker synced
 
 **Root cause of the persistent CI failure.** GitHub `ci` had *never* succeeded: both the 2026-10-23 run (`6877f4b`) and the 2026-11-04 rerun (`a7fec2a`) died in the Install step. Job-log inspection (via the stored git credential, token never persisted) showed pip's resolution error: `Could not find a version that satisfies the requirement mypy==1.13.2`. **`mypy==1.13.2` was never published to PyPI** - the 1.13 line ends at `1.13.0`; the whole `==1.13.2` pin was a phantom. Local machines never caught it because the local env had drifted to mypy 2.4/Python 3.14 and no local env resolved the pinned lockfile. All other 39 pins were validated against the PyPI index for Python 3.11 (only `1.13.0` was wrong).
