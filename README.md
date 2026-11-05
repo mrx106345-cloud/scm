@@ -6,7 +6,7 @@ Spec: `DEVELOPMENT_SPEC_scm_agent.md`. Progress: `PROGRESS.md`. Decisions: `DECI
 ## Status (2026-11-04) — Phases 1-3 + ERP read connectors implemented; CI/e2e green
 
 - **Tests:** backend 173/173 green (unit, integration, security, golden inventory 11/11 cases, golden alerts/classify); frontend 93/93 Vitest tests in 18 files; Playwright e2e 2/2 chromium smoke tests (ran for the first time 2026-11-04).
-- **CI:** GitHub Actions `ci` (Python 3.11: install/lint/mypy/pytest/bandit/pip-audit) and `frontend-ci` (node 22) both green on `main`. The previous persistent `ci` failure was a phantom `mypy==1.13.2` pin (never published on PyPI; fixed 2026-11-04).
+- **CI:** GitHub Actions `ci` (Python 3.11: install/lint/mypy/pytest/bandit/pip-audit) and `frontend-ci` (node 22: lint, format, types, unit tests, coverage, audit, build, Playwright smoke) both green on `main`. The previous persistent `ci` failure was a phantom `mypy==1.13.2` pin (never published on PyPI; fixed 2026-11-04).
 - **Lint/types:** ruff clean, ruff format clean, mypy `app` clean (strict, 55 files). Frontend lint/format/type-check clean.
 - **Security-hardening (2026-10-26):** JSON-body login with lockout + full `auth.*` audit trail, RBAC deny-by-default on every router, CSRF header dependency app-wide, prod-secret fail-fast, live-ledger dashboard summary, outbox honors edited payloads, prompt-injection fence hardening, frontend auth client with same-origin hardening + global 401 redirect. See `SECURITY_FINDINGS.md`.
 - **Acceptance (A1-A3)** on synthetic data, `tools/simulate_acceptance.py`:
