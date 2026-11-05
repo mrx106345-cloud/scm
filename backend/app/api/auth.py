@@ -84,7 +84,7 @@ def _audit(
     )
 
 
-@router.post("/login", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/login", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 def login(response: Response, body: LoginRequest) -> None:
     """Authenticate a user and issue a session cookie.
 
@@ -174,7 +174,7 @@ def login(response: Response, body: LoginRequest) -> None:
         session.close()
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 def logout(
     response: Response,
     user: dict[str, str | None] = Depends(get_current_user),  # noqa: B008
