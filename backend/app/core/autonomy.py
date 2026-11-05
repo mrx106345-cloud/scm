@@ -119,7 +119,7 @@ def _missing_limits(limits: dict[str, Any]) -> list[str]:
     missing = []
     for key in LIMIT_KEYS:
         value = limits.get(key)
-        if value is None or (isinstance(value, (list, str)) and len(value) == 0):
+        if value is None or (isinstance(value, list | str) and len(value) == 0):
             missing.append(key)
     return missing
 
