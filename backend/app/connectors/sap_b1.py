@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -68,6 +69,21 @@ class SapImportResult:
 
 class SapError(Exception):
     """Raised when SAP B1 connector operations fail."""
+
+
+def validate_allowed_host(base_url: str, allowed_hosts: str) -> None:
+    """Reject SAP base URLs outside the configured host allowlist.
+
+    ``allowed_hosts`` is a comma-separated list from SCM_SAP_ALLOWED_HOSTS.
+    Empty means "any configured host" (dev default); production installs set
+    the exact Service Layer host(s).
+    """
+    parsed = urlparse(base_url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise SapError("sap base_url must be an absolute http(s) URL")
+    allowed = [h.strip().lower() for h in allowed_hosts.split(",") if h.strip()]
+    if allowed and parsed.hostname.lower() not in allowed:
+        raise SapError(f"sap host {parsed.hostname!r} is not in SCM_SAP_ALLOWED_HOSTS")
 
 
 def _map_fields(raw: dict[str, Any], field_map: dict[str, str]) -> dict[str, str]:

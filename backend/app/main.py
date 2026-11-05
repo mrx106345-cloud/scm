@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from fastapi import Depends, FastAPI
 
+from app.api.actions import router as actions_router
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.catalog import router as catalog_router
 from app.api.chat import router as chat_router
+from app.api.connectors import router as connectors_router
 from app.api.items import router as items_router
 from app.api.notes import router as notes_router
 from app.api.outbox import router as outbox_router
@@ -37,6 +40,9 @@ def create_app() -> FastAPI:
     app.include_router(outbox_router, dependencies=_CSRF)
     app.include_router(suppliers_router, dependencies=_CSRF)
     app.include_router(items_router, dependencies=_CSRF)
+    app.include_router(connectors_router, dependencies=_CSRF)
+    app.include_router(actions_router, dependencies=_CSRF)
+    app.include_router(admin_router, dependencies=_CSRF)
 
     @app.get("/health")
     def health() -> dict[str, str]:

@@ -5,7 +5,17 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    LargeBinary,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -304,3 +314,69 @@ class NoteInbox(Base):
     __table_args__ = (
         CheckConstraint("status IN ('new','confirmed','dismissed')", name="ck_note_status"),
     )
+
+
+class Connector(Base):
+    """Registered external data connector (Part C2, G1).
+
+    Credentials live only in ``config_encrypted`` (AES-256-GCM, see
+    app/core/crypto.py). API responses must always pass configs through
+    ``mask_connector_config`` - raw secrets are never serialized.
+    ``write_enabled`` is False by default; writes require an approved
+    recommendation AND this flag AND the global ERP write switch.
+    """
+
+    __tablename__ = "connectors"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    name: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    type: Mapped[str] = mapped_column(String(16), nullable=False)
+    config_encrypted: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    write_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    schedule_cron: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('csv','sql','tally','sap_b1','zoho')", name="ck_connector_type"
+        ),
+    )
+
+
+class Action(Base):
+    """One execution attempt for an approved recommendation (Part C2, I2)."""
+
+    __tablename__ = "actions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    recommendation_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("recommendations.id"), nullable=False, index=True
+    )
+    executed_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    target: Mapped[str] = mapped_column(String(16), nullable=False)
+    result: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("target IN ('outbox','connector')", name="ck_action_target"),
+        CheckConstraint(
+            "status IN ('executed','failed','blocked')", name="ck_action_status"
+        ),
+    )
+
+
+class DataQualityRun(Base):
+    """Persisted data-quality scan (Part C2; enables a real dashboard score)."""
+
+    __tablename__ = "data_quality_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    run_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    connector_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("connectors.id"), nullable=True, index=True
+    )
+    score: Mapped[int] = mapped_column(nullable=False, default=0)
+    critical_count: Mapped[int] = mapped_column(nullable=False, default=0)
+    details: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON

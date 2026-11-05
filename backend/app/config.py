@@ -62,6 +62,23 @@ class Settings(BaseSettings):
     inbox_dir: str = "./data/inbox"
     outbox_dir: str = "./data/outbox"
 
+    # Credential encryption (P4-04): base64 32-byte AES-256-GCM key via
+    # SCM_CREDENTIAL_KEY, or a 0600 key file at this path.
+    credential_key_file: str = ""
+
+    # Autonomy (Part I): level 3 needs this many days in L1/L2 first.
+    autonomy_min_days: int = 30
+
+    # Optional connectors (P4-07): Zoho is off unless the owner enables it.
+    zoho_enabled: bool = False
+    zoho_api_base: str = "https://www.zohoapis.com"
+
+    # Direct ERP write (P4-06): off by default even when a connector opts in.
+    erp_write_enabled: bool = False
+
+    # SAP B1 host allowlist (P4-03 hardening): empty = any configured host.
+    sap_allowed_hosts: str = ""
+
     currency: str = "INR"
 
     @model_validator(mode="after")
