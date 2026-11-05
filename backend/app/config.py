@@ -9,7 +9,9 @@ from __future__ import annotations
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_DEV_SESSION_SECRET = "dev-only-secret-change-in-prod"  # noqa: S105
+# Bandit B105 heuristic flags the literal because of the variable name; this
+# is the dev-only default and `Settings` refuses it in prod (model_validator).
+_DEV_SESSION_SECRET = "dev-only-secret-change-in-prod"  # noqa: S105  # nosec B105
 
 
 class Settings(BaseSettings):

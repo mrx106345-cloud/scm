@@ -96,9 +96,8 @@ def validate_numbers(text: str, facts: dict[str, object]) -> tuple[bool, list[st
 
     # Unit words (lakh/crore/...) are never converted in v1: any occurrence
     # attached to a number fails validation.
-    if _UNIT_WORD_RE.search(work):
-        unit_hit = _UNIT_WORD_RE.search(work)
-        assert unit_hit is not None
+    unit_hit = _UNIT_WORD_RE.search(work)
+    if unit_hit is not None:
         unmatched.append(unit_hit.group(0).strip())
 
     # "Step 1:" ordinals are not measurements.

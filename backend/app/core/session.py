@@ -14,7 +14,8 @@ import jwt
 from app.config import settings
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_SUBJECT = "access"  # noqa: S105 — JWT token type, not a password
+# JWT subject discriminator, not a credential (bandit B105 name heuristic).
+ACCESS_TOKEN_SUBJECT = "access"  # noqa: S105  # nosec B105
 
 
 def create_access_token(
