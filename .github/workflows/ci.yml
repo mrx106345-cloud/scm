@@ -19,4 +19,4 @@ jobs:
       - name: Security lint
         run: bandit -q -r ./backend/app
       - name: Dependency audit
-        run: pip-audit --progress-bar=off
+        run: pip-audit --progress-spinner=off
